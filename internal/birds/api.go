@@ -140,7 +140,7 @@ func (cfg *ApiConfig) handleLoadLeaderboard(w http.ResponseWriter, r *http.Reque
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 
 	var builder strings.Builder
-	builder.WriteString("<table>\n")
+	builder.WriteString("<table>\n<tr><th>Rank</th><th>Common Name</th><th>ELO</th></tr>\n")
 
 	for i, rating := range topBirds {
 		row := fmt.Sprintf(

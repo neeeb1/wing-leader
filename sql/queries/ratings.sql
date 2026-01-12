@@ -35,7 +35,8 @@ WHERE bird_id = $2
 RETURNING *;
 
 -- name: GetTopRatings :many
-SELECT * from ratings
+SELECT ratings.id, ratings.matches, ratings.rating, birds.common_name, birds.scientific_name, birds.status from ratings
+INNER JOIN birds ON ratings.bird_id = birds.id
 ORDER BY rating DESC
 LIMIT $1;
 

@@ -46,28 +46,37 @@ func (q *Queries) GetRatingByBirdID(ctx context.Context, birdID uuid.UUID) (Rati
 }
 
 const getTopRatings = `-- name: GetTopRatings :many
-SELECT id, created_at, updated_at, matches, rating, bird_id, common_name from ratings
+SELECT ratings.id, ratings.matches, ratings.rating, birds.common_name, birds.scientific_name, birds.status from ratings
+INNER JOIN birds ON ratings.bird_id = birds.id
 ORDER BY rating DESC
 LIMIT $1
 `
 
-func (q *Queries) GetTopRatings(ctx context.Context, limit int32) ([]Rating, error) {
+type GetTopRatingsRow struct {
+	ID             uuid.UUID
+	Matches        sql.NullInt32
+	Rating         sql.NullInt32
+	CommonName     sql.NullString
+	ScientificName sql.NullString
+	Status         sql.NullString
+}
+
+func (q *Queries) GetTopRatings(ctx context.Context, limit int32) ([]GetTopRatingsRow, error) {
 	rows, err := q.db.QueryContext(ctx, getTopRatings, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Rating
+	var items []GetTopRatingsRow
 	for rows.Next() {
-		var i Rating
+		var i GetTopRatingsRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
 			&i.Matches,
 			&i.Rating,
-			&i.BirdID,
 			&i.CommonName,
+			&i.ScientificName,
+			&i.Status,
 		); err != nil {
 			return nil, err
 		}
