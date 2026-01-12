@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -11,18 +10,24 @@ import (
 	"github.com/neeeb1/rate_birds/internal/birds"
 	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/neeeb1/rate_birds/internal/server"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
 	if !isRunningInDockerContainer() {
-		fmt.Println("Running locally, reading local .env")
+		log.Info().Msg("Running locally, loading .env")
 		err := godotenv.Load()
 		if err != nil {
-			fmt.Printf("Failed to load .env: %s\n", err)
+			log.Fatal().Err(err).Msg("Failed to load .env")
 			return
 		}
 	} else {
-		fmt.Println("Running in docker container, skipping local .env read")
+		log.Info().Msg("Running in container, skipping .env load")
 	}
 
 	apiCfg := birds.ApiConfig{}
@@ -33,38 +38,38 @@ func main() {
 
 	db, err := sql.Open("postgres", apiCfg.DbURL)
 	if err != nil {
-		fmt.Printf("failed to open db: %s", err)
+		log.Fatal().Err(err).Msg("failed to open db")
 		return
 	}
 	apiCfg.Db = db
 	apiCfg.DbQueries = database.New(db)
 
-	fmt.Println("apicfg loaded")
+	log.Info().Msg("apicfg loaded")
 
 	count, err := apiCfg.DbQueries.GetTotalBirdCount(context.Background())
 	if err != nil {
-		fmt.Printf("failed to count db entries: %s", err)
+		log.Fatal().Err(err).Msg("failed to count db entries")
 		return
 	}
 	if count == 0 {
 		err = apiCfg.PopulateBirdDB()
 		if err != nil {
-			fmt.Printf("failed to populate birds: %s", err)
+			log.Fatal().Err(err).Msg("failed to populate birds")
 			return
 		}
 	} else {
-		fmt.Println("Bird db already populated - skipping initial population...")
+		log.Info().Msg("Bird db already populated - skipping initial population...")
 	}
 
 	err = apiCfg.PopulateRatingsDB()
 	if err != nil {
-		fmt.Printf("failed to populate ratings: %s", err)
+		log.Fatal().Err(err).Msg("failed to populate ratings")
 		return
 	}
 
 	/* 	err = apiCfg.CacheImages()
 	   	if err != nil {
-	   		fmt.Printf("failed to cache remote images: %s", err)
+	   		log.Fatal().Err(err).Msg("failed to cache remote images")
 	   		return
 	   	} */
 

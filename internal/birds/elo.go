@@ -7,6 +7,7 @@ import (
 	"math"
 
 	"github.com/neeeb1/rate_birds/internal/database"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -65,7 +66,7 @@ func (cfg *ApiConfig) ScoreMatch(winner, loser database.Bird) error {
 	}
 	_, err = qtx.UpdateRatingByBirdID(ctx, loseParams)
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err).Msg("failed to update loser rating")
 		return err
 	}
 
@@ -73,8 +74,8 @@ func (cfg *ApiConfig) ScoreMatch(winner, loser database.Bird) error {
 		return fmt.Errorf("unable to commit sql transaction: %w", err)
 	}
 
-	//fmt.Printf("Updated ratings for %s and %s\n", winner.CommonName.String, loser.CommonName.String)
-	fmt.Printf("(W) '%s': %d || (L) '%s': %d\n", winner.CommonName.String, winnerNewRating, loser.CommonName.String, loserNewRating)
+	//log.Info().Msgf("Updated ratings for %s and %s\n", winner.CommonName.String, loser.CommonName.String)
+	log.Info().Msgf("(W) '%s': %d || (L) '%s': %d\n", winner.CommonName.String, winnerNewRating, loser.CommonName.String, loserNewRating)
 	return nil
 }
 

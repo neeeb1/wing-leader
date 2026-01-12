@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/neeeb1/rate_birds/internal/database"
+	"github.com/rs/zerolog/log"
 )
 
 const maxConcurrent = 50
@@ -38,7 +39,7 @@ type Bird struct {
 }
 
 func (cfg *ApiConfig) PopulateBirdDB() error {
-	fmt.Println("\n---* Populating birds db from Nuthatch API *---")
+	log.Info().Msg("---* Populating birds db from Nuthatch API *---")
 
 	intialFetch, err := cfg.GetNuthatchBirds(1, 1)
 	if err != nil {
@@ -82,16 +83,16 @@ func (cfg *ApiConfig) PopulateBirdDB() error {
 	}
 	count, err := cfg.DbQueries.GetTotalBirdCount(context.Background())
 	if err != nil {
-		fmt.Printf("failed to count birds in db: %s\n", err)
+		log.Error().Err(err).Msg("failed to count birds in db")
 	} else {
-		fmt.Printf("Success - database contains %d bird entries\n", count)
+		log.Info().Msgf("Success - database contains %d bird entries", count)
 	}
 
 	return nil
 }
 
 func (cfg *ApiConfig) PopulateRatingsDB() error {
-	fmt.Println("\n---* Populating ratings db *---")
+	log.Info().Msg("---* Populating ratings db *---")
 
 	birds, err := cfg.DbQueries.GetAllBirds(context.Background())
 	if err != nil {
@@ -105,7 +106,7 @@ func (cfg *ApiConfig) PopulateRatingsDB() error {
 			BirdID:  b.ID,
 		}
 
-		//fmt.Printf("adding %s to ratings with default values\n", b.CommonName.String)
+		//log.Info().Msgf("adding %s to ratings with default values\n", b.CommonName.String)
 
 		err = cfg.DbQueries.PopulateRating(context.Background(), params)
 		if err != nil {
@@ -115,15 +116,15 @@ func (cfg *ApiConfig) PopulateRatingsDB() error {
 
 	count, err := cfg.DbQueries.GetTotalRatings(context.Background())
 	if err != nil {
-		fmt.Printf("failed to count ratings in db: %s\n", err)
+		log.Error().Err(err).Msg("failed to count ratings in db")
 	} else {
-		fmt.Printf("Success - database contains %d rating entries\n", count)
+		log.Info().Msgf("Success - database contains %d rating entries", count)
 	}
 	return nil
 }
 
 func (cfg *ApiConfig) CacheImages() error {
-	fmt.Println("\n*-- Starting initial image caching --*")
+	log.Info().Msg("---* Starting initial image caching --*")
 	startTime := time.Now()
 
 	imageUrls, err := cfg.DbQueries.GetAllImageUrls(context.Background())
@@ -153,12 +154,11 @@ func (cfg *ApiConfig) CacheImages() error {
 				semaphore <- struct{}{}
 				defer func() { <-semaphore }()
 
-				//fmt.Println(u)
 				cacheUrl := fmt.Sprintf("http://%s:1337/200x200,sc/%s", cfg.CacheHost, u)
 
 				res, err := client.Get(cacheUrl)
 				if err != nil {
-					fmt.Printf("error caching image url (%s): %s\n", u, err)
+					log.Error().Err(err).Msgf("error caching image url (%s)", u)
 					mu.Lock()
 					totalFailure += 1
 					mu.Unlock()
@@ -169,14 +169,14 @@ func (cfg *ApiConfig) CacheImages() error {
 				res.Body.Close()
 
 				if res.StatusCode == http.StatusNotFound {
-					fmt.Printf("response: not found\n")
+					log.Info().Msgf("response: not found for url (%s)", u)
 					mu.Lock()
 					totalFailure += 1
 					mu.Unlock()
 					return
 				}
 
-				fmt.Printf("Image cached (%s)\n", u)
+				log.Info().Msgf("Image cached (%s)", u)
 				mu.Lock()
 				totalSuccess += 1
 				mu.Unlock()
@@ -186,11 +186,11 @@ func (cfg *ApiConfig) CacheImages() error {
 
 	wg.Wait()
 
-	fmt.Printf("Successfully cached %d images\n", totalSuccess)
-	fmt.Printf("%d images failed to cache\n", totalFailure)
+	log.Info().Msgf("Successfully cached %d images", totalSuccess)
+	log.Info().Msgf("%d images failed to cache", totalFailure)
 	timeElapsed := time.Since(startTime)
-	fmt.Printf("Total cachine time: %s\n", timeElapsed)
-	fmt.Println("*-- Initial image caching completed --*")
+	log.Debug().Msgf("Total cachine time: %s", timeElapsed)
+	log.Info().Msg("---* Initial image caching completed --*")
 
 	return nil
 }

@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/neeeb1/rate_birds/internal/database"
+	"github.com/rs/zerolog/log"
 )
 
 type ApiConfig struct {
@@ -20,14 +20,14 @@ type ApiConfig struct {
 }
 
 func (cfg *ApiConfig) GetNuthatchBirds(page, pageSize int) (BirdsJson, error) {
-	fmt.Printf("fetching birds from Nuthatch API\npage: %d, pagesize: %d\n", page, pageSize)
+	log.Info().Msgf("fetching birds from Nuthatch API\npage: %d, pagesize: %d\n", page, pageSize)
 	var birdsJson BirdsJson
 
 	url := fmt.Sprintf("https://nuthatch.lastelm.software/v2/birds?page=%d&pageSize=%d", page, pageSize)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("failed to create request")
 	}
 	req.Header.Add("API-Key", cfg.NuthatcherApiKey)
 	req.Header.Add("accept", "application/json")
@@ -35,16 +35,16 @@ func (cfg *ApiConfig) GetNuthatchBirds(page, pageSize int) (BirdsJson, error) {
 	client := http.DefaultClient
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("failed to make request to Nuthatch API")
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("statuscode error: %d %s", resp.StatusCode, resp.Status)
+		log.Fatal().Msgf("statuscode error: %d %s", resp.StatusCode, resp.Status)
 	}
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("failed to read response body")
 	}
 
 	json.Unmarshal(data, &birdsJson)

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
 
 func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {
@@ -21,33 +22,33 @@ func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {
 }
 
 func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("call to score match handler")
+	log.Info().Msg("call to score match handler")
 
 	leftBirdID, err := uuid.Parse(r.URL.Query().Get("leftBirdID"))
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err).Msg("failed to parse left bird ID")
 	}
 	leftBird, err := cfg.DbQueries.GetBirdByID(r.Context(), leftBirdID)
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err).Msg("failed to get left bird by ID")
 	}
 
 	rightBirdID, err := uuid.Parse(r.URL.Query().Get("rightBirdID"))
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err).Msg("failed to parse right bird ID")
 	}
 	rightBird, err := cfg.DbQueries.GetBirdByID(r.Context(), rightBirdID)
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err).Msg("failed to get right bird by ID")
 	}
 
 	winner := r.URL.Query().Get("winner")
 	switch winner {
 	case "left":
-		//fmt.Printf("Winner: %s, Loser: %s\n", leftBird.CommonName.String, rightBird.CommonName.String)
+		//log.Info().Msgf("Winner: %s, Loser: %s\n", leftBird.CommonName.String, rightBird.CommonName.String)
 		cfg.ScoreMatch(leftBird, rightBird)
 	case "right":
-		//fmt.Printf("Winner: %s, Loser: %s\n", rightBird.CommonName.String, leftBird.CommonName.String)
+		//log.Info().Msgf("Winner: %s, Loser: %s\n", rightBird.CommonName.String, leftBird.CommonName.String)
 		cfg.ScoreMatch(rightBird, leftBird)
 	}
 
@@ -55,10 +56,10 @@ func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("call to load bird handler")
+	log.Info().Msg("call to load bird handler")
 	rng_bird, err := cfg.DbQueries.GetRandomBirdWithImage(r.Context(), 2)
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err).Msg("failed to get random birds with images")
 	}
 
 	newLeftBird := rng_bird[0]
@@ -116,23 +117,23 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *ApiConfig) handleLoadLeaderboard(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("call to load leaderboard handler")
+	log.Info().Msg("call to load leaderboard handler")
 
 	listLength, err := strconv.Atoi(r.URL.Query().Get("listLength"))
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err).Msg("failed to parse listLength")
 		return
 	}
 
 	if listLength <= 0 || listLength > 1000 {
 		err := fmt.Errorf("listLength must be between 1-1000")
-		fmt.Println(err)
+		log.Error().Err(err).Msg("invalid listLength")
 		listLength = 10
 	}
 
 	topBirds, err := cfg.DbQueries.GetTopRatings(r.Context(), int32(listLength))
 	if err != nil {
-		fmt.Println(err)
+		log.Error().Err(err).Msg("failed to get top ratings")
 		return
 	}
 
