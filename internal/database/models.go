@@ -23,6 +23,14 @@ type Bird struct {
 	ImageUrls      []string
 }
 
+type Match struct {
+	ID           uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	WinnerbirdID uuid.UUID
+	LoserbirdID  uuid.UUID
+}
+
 type Rating struct {
 	ID         uuid.UUID
 	CreatedAt  time.Time

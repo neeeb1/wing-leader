@@ -19,6 +19,7 @@ func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {
 	mux.HandleFunc("GET /api/leaderboard/", cfg.handleLoadLeaderboard)
 	mux.HandleFunc("GET /api/image/", cfg.handleCachedImage)
 	mux.HandleFunc("GET /api/loadbirds/", cfg.handleLoadBirds)
+	//mux.Handle("/matches", http.HandlerFunc(cfg.handleLoadMatches))
 }
 
 func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
@@ -194,3 +195,40 @@ func (cfg *ApiConfig) handleCachedImage(w http.ResponseWriter, r *http.Request) 
 
 	io.Copy(w, res.Body)
 }
+
+/* func (cfg *ApiConfig) handleLoadMatches(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("call to load matches handler")
+
+	matches, err := cfg.DbQueries.GetAllMatches(r.Context(), 100)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get matches")
+		return
+	}
+
+	w.Header().Add("Content-Type", "text/html; charset=utf-8")
+
+	var builder strings.Builder
+	builder.WriteString("<table>\n<tr><th>Match ID</th><th>Winner</th><th>Loser</th><th>Date</th></tr>\n")
+
+	for _, match := range matches {
+		row := fmt.Sprintf(
+			`<tr>
+				<td>%s</td>
+				<td>%s</td>
+				<td>%s</td>
+				<td>%s</td>
+			</tr>
+			`,
+			match.ID.String(),
+			match.LoserbirdID.String(),
+			match.WinnerbirdID.String(),
+			match.CreatedAt.Format("2006-01-02 15:04:05"),
+		)
+		builder.WriteString(row)
+	}
+
+	builder.WriteString("</table>\n")
+	payload := builder.String()
+
+	w.Write([]byte(payload))
+} */

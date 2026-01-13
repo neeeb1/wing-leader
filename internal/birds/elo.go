@@ -70,6 +70,16 @@ func (cfg *ApiConfig) ScoreMatch(winner, loser database.Bird) error {
 		return err
 	}
 
+	matchParms := database.RecordMatchParams{
+		LoserbirdID:  loser.ID,
+		WinnerbirdID: winner.ID,
+	}
+	_, err = qtx.RecordMatch(ctx, matchParms)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to record match")
+		return err
+	}
+
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("unable to commit sql transaction: %w", err)
 	}
