@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -16,9 +17,12 @@ import (
 )
 
 func main() {
+	// Intialize zerolog and pretty console output
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
+	// Perform a check to see if we are running in a docker container
+	// If not, load the .env file for local development
 	if !isRunningInDockerContainer() {
 		log.Info().Msg("Running locally, loading .env")
 		err := godotenv.Load()
@@ -30,22 +34,38 @@ func main() {
 		log.Info().Msg("Running in container, skipping .env load")
 	}
 
+	// Configure api config
 	apiCfg := birds.ApiConfig{}
-
 	apiCfg.NuthatcherApiKey = os.Getenv("NUTHATCH_KEY")
 	apiCfg.DbURL = os.Getenv("DB_URL")
 	apiCfg.CacheHost = os.Getenv("CACHE_HOST")
 
+	// Intialize database connection
+	// defer closing til program end
 	db, err := sql.Open("postgres", apiCfg.DbURL)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to open db")
 		return
 	}
+	defer db.Close()
+	// Confirm database is reachable
+	err = db.Ping()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to ping db")
+		return
+	}
+	// Set database connection pool settings
+	db.SetMaxOpenConns(50)
+	db.SetMaxIdleConns(20)
+	db.SetConnMaxLifetime(10 * time.Minute)
+
+	// Add database to api config
 	apiCfg.Db = db
 	apiCfg.DbQueries = database.New(db)
 
 	log.Info().Msg("apicfg loaded")
 
+	// Populate bird database if unintilaized
 	count, err := apiCfg.DbQueries.GetTotalBirdCount(context.Background())
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to count db entries")
@@ -61,12 +81,14 @@ func main() {
 		log.Info().Msg("Bird db already populated - skipping initial population...")
 	}
 
+	// Populate ratings database
 	err = apiCfg.PopulateRatingsDB()
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to populate ratings")
 		return
 	}
 
+	// Start async caching of remote images
 	go func() {
 		err = apiCfg.CacheImages()
 	}()
@@ -75,6 +97,7 @@ func main() {
 		return
 	}
 
+	// Start the server
 	server.StartServer(&apiCfg)
 }
 
