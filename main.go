@@ -67,11 +67,13 @@ func main() {
 		return
 	}
 
-	/* 	err = apiCfg.CacheImages()
-	   	if err != nil {
-	   		log.Fatal().Err(err).Msg("failed to cache remote images")
-	   		return
-	   	} */
+	go func() {
+		err = apiCfg.CacheImages()
+	}()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to cache remote images")
+		return
+	}
 
 	server.StartServer(&apiCfg)
 }

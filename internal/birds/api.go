@@ -171,7 +171,7 @@ func (cfg *ApiConfig) handleCachedImage(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	cacheURL := fmt.Sprintf("http://%s:1337/sc/%s", cfg.CacheHost, imageURL)
+	cacheURL := fmt.Sprintf("http://%s:1337/500x500,sc/%s", cfg.CacheHost, imageURL)
 
 	client := &http.Client{
 		Timeout: 30 * time.Second,
