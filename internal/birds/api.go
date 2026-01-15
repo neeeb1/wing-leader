@@ -1,7 +1,9 @@
 package birds
 
 import (
+	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -23,6 +25,34 @@ func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {
 	mux.HandleFunc("GET /api/image/", cfg.handleCachedImage)
 	mux.HandleFunc("GET /api/loadbirds/", cfg.handleLoadBirds)
 	//mux.Handle("/matches", http.HandlerFunc(cfg.handleLoadMatches))
+	mux.HandleFunc("GET /health/live", HandleLiveness)
+	mux.HandleFunc("GET /health/ready", cfg.HandleReadiness)
+}
+
+type HealthStatus struct {
+	Status string `json:"status"`
+}
+
+func HandleLiveness(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(HealthStatus{Status: "alive"})
+}
+
+func (cfg *ApiConfig) HandleReadiness(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+
+	// Check database connectivity
+	if err := cfg.Db.PingContext(ctx); err != nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		json.NewEncoder(w).Encode(HealthStatus{Status: "unavailable"})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(HealthStatus{Status: "ready"})
 }
 
 func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
