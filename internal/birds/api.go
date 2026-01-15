@@ -45,6 +45,11 @@ func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if time.Now().After(session.ExpiresAt) {
+		log.Error().Err(err).Msg("Session token has already expired")
+		return
+	}
+
 	leftBirdID, err := uuid.Parse(r.URL.Query().Get("leftBirdID"))
 	if err != nil {
 		log.Error().Err(err).Msg("failed to parse left bird ID")
