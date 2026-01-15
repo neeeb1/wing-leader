@@ -1,6 +1,7 @@
 package birds
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,6 +11,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/neeeb1/rate_birds/internal/auth"
+	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/rs/zerolog/log"
 )
 
@@ -24,6 +27,23 @@ func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {
 
 func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("call to score match handler")
+
+	cookie, err := r.Cookie("sessionToken")
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to read sessionToken cookie")
+		return
+	}
+
+	session, err := cfg.DbQueries.GetMatchSessionByToken(r.Context(), cookie.Value)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get session by token")
+		return
+	}
+
+	if session.Voted.Bool {
+		log.Error().Err(err).Msg("Session has already been voted on")
+		return
+	}
 
 	leftBirdID, err := uuid.Parse(r.URL.Query().Get("leftBirdID"))
 	if err != nil {
@@ -47,10 +67,31 @@ func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
 	switch winner {
 	case "left":
 		//log.Info().Msgf("Winner: %s, Loser: %s\n", leftBird.CommonName.String, rightBird.CommonName.String)
-		cfg.ScoreMatch(leftBird, rightBird)
+		err := cfg.ScoreMatch(leftBird, rightBird)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to score match")
+			break
+		}
+
+		voteParams := database.VoteMatchParams{
+			ID:           session.ID,
+			WinnerbirdID: uuid.NullUUID{UUID: leftBird.ID, Valid: true},
+		}
+		cfg.DbQueries.VoteMatch(r.Context(), voteParams)
+
 	case "right":
 		//log.Info().Msgf("Winner: %s, Loser: %s\n", rightBird.CommonName.String, leftBird.CommonName.String)
-		cfg.ScoreMatch(rightBird, leftBird)
+		err := cfg.ScoreMatch(rightBird, leftBird)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to score match")
+			break
+		}
+
+		voteParams := database.VoteMatchParams{
+			ID:           session.ID,
+			WinnerbirdID: uuid.NullUUID{UUID: rightBird.ID, Valid: true},
+		}
+		cfg.DbQueries.VoteMatch(r.Context(), voteParams)
 	}
 
 	cfg.handleLoadBirds(w, r)
@@ -58,13 +99,45 @@ func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
 
 func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("call to load bird handler")
+
 	rng_bird, err := cfg.DbQueries.GetRandomBirdWithImage(r.Context(), 2)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to get random birds with images")
 	}
 
-	newLeftBird := rng_bird[0]
-	newRightBird := rng_bird[1]
+	newLeftBird, newRightBird := rng_bird[0], rng_bird[1]
+
+	sessionToken, err := auth.CreateSessionToken(32)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to generate new match session token")
+	}
+
+	sessionParams := database.CreateMatchSessionParams{
+		LeftbirdID:   newLeftBird.ID,
+		RightbirdID:  newRightBird.ID,
+		SessionToken: sessionToken,
+		ExpiresAt:    time.Now().Add(600 * time.Second),
+		UserIp:       sql.NullString{String: r.RemoteAddr, Valid: true},
+		UserAgent:    sql.NullString{String: r.UserAgent(), Valid: true},
+	}
+
+	if _, err := cfg.DbQueries.CreateMatchSession(r.Context(), sessionParams); err != nil {
+		log.Error().Err(err).Msg("Failed to create match session db entry")
+		return
+	}
+
+	sessionCookie := &http.Cookie{
+		Name:  "sessionToken",
+		Value: sessionToken,
+		Path:  "/",
+		//Max age 10min
+		MaxAge:   600,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+
+	http.SetCookie(w, sessionCookie)
 
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 	payload := fmt.Sprintf(

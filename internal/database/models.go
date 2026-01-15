@@ -31,6 +31,20 @@ type Match struct {
 	LoserbirdID  uuid.UUID
 }
 
+type MatchSession struct {
+	ID           uuid.UUID
+	CreatedAt    time.Time
+	LeftbirdID   uuid.UUID
+	RightbirdID  uuid.UUID
+	SessionToken string
+	ExpiresAt    time.Time
+	Voted        sql.NullBool
+	VotedAt      sql.NullTime
+	WinnerbirdID uuid.NullUUID
+	UserIp       sql.NullString
+	UserAgent    sql.NullString
+}
+
 type Rating struct {
 	ID         uuid.UUID
 	CreatedAt  time.Time
