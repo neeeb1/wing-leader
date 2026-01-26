@@ -8,7 +8,7 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"github.com/neeeb1/rate_birds/internal/birds"
+	"github.com/neeeb1/rate_birds/internal/api"
 	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/neeeb1/rate_birds/internal/server"
 
@@ -35,7 +35,7 @@ func main() {
 	}
 
 	// Configure api config
-	apiCfg := birds.ApiConfig{}
+	apiCfg := api.ApiConfig{}
 	apiCfg.NuthatcherApiKey = os.Getenv("NUTHATCH_KEY")
 	apiCfg.DbURL = os.Getenv("DB_URL")
 	apiCfg.CacheHost = os.Getenv("CACHE_HOST")

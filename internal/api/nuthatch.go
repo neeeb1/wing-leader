@@ -1,23 +1,13 @@
-package birds
+package api
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 
-	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/rs/zerolog/log"
 )
-
-type ApiConfig struct {
-	NuthatcherApiKey string
-	DbURL            string
-	DbQueries        *database.Queries
-	Db               *sql.DB
-	CacheHost        string
-}
 
 func (cfg *ApiConfig) GetNuthatchBirds(page, pageSize int) (BirdsJson, error) {
 	log.Info().Msgf("fetching birds from Nuthatch API\npage: %d, pagesize: %d\n", page, pageSize)

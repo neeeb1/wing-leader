@@ -1,11 +1,14 @@
-package birds
+package api
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 	"math"
+	"net/http"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/rs/zerolog/log"
 )
@@ -15,6 +18,83 @@ const (
 	k = 32
 	d = 400
 )
+
+func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("call to score match handler")
+
+	cookie, err := r.Cookie("sessionToken")
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to read sessionToken cookie")
+		return
+	}
+
+	session, err := cfg.DbQueries.GetMatchSessionByToken(r.Context(), cookie.Value)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get session by token")
+		return
+	}
+
+	if session.Voted.Bool {
+		log.Error().Err(err).Msg("Session has already been voted on")
+		return
+	}
+
+	if time.Now().After(session.ExpiresAt) {
+		log.Error().Err(err).Msg("Session token has already expired")
+		return
+	}
+
+	leftBirdID, err := uuid.Parse(r.URL.Query().Get("leftBirdID"))
+	if err != nil {
+		log.Error().Err(err).Msg("failed to parse left bird ID")
+	}
+	leftBird, err := cfg.DbQueries.GetBirdByID(r.Context(), leftBirdID)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get left bird by ID")
+	}
+
+	rightBirdID, err := uuid.Parse(r.URL.Query().Get("rightBirdID"))
+	if err != nil {
+		log.Error().Err(err).Msg("failed to parse right bird ID")
+	}
+	rightBird, err := cfg.DbQueries.GetBirdByID(r.Context(), rightBirdID)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get right bird by ID")
+	}
+
+	winner := r.URL.Query().Get("winner")
+	switch winner {
+	case "left":
+		//log.Info().Msgf("Winner: %s, Loser: %s\n", leftBird.CommonName.String, rightBird.CommonName.String)
+		err := cfg.ScoreMatch(leftBird, rightBird)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to score match")
+			break
+		}
+
+		voteParams := database.VoteMatchParams{
+			ID:           session.ID,
+			WinnerbirdID: uuid.NullUUID{UUID: leftBird.ID, Valid: true},
+		}
+		cfg.DbQueries.VoteMatch(r.Context(), voteParams)
+
+	case "right":
+		//log.Info().Msgf("Winner: %s, Loser: %s\n", rightBird.CommonName.String, leftBird.CommonName.String)
+		err := cfg.ScoreMatch(rightBird, leftBird)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to score match")
+			break
+		}
+
+		voteParams := database.VoteMatchParams{
+			ID:           session.ID,
+			WinnerbirdID: uuid.NullUUID{UUID: rightBird.ID, Valid: true},
+		}
+		cfg.DbQueries.VoteMatch(r.Context(), voteParams)
+	}
+
+	cfg.handleLoadBirds(w, r)
+}
 
 func (cfg *ApiConfig) ScoreMatch(winner, loser database.Bird) error {
 	ctx := context.Background()

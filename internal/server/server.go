@@ -3,13 +3,13 @@ package server
 import (
 	"net/http"
 
-	"github.com/neeeb1/rate_birds/internal/birds"
+	"github.com/neeeb1/rate_birds/internal/api"
 	"github.com/rs/zerolog/log"
 )
 
-func StartServer(cfg *birds.ApiConfig) {
+func StartServer(cfg *api.ApiConfig) {
 	mux := http.NewServeMux()
-	birds.RegisterEndpoints(mux, cfg)
+	api.RegisterEndpoints(mux, cfg)
 
 	server := http.Server{}
 
