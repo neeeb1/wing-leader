@@ -16,6 +16,6 @@ func StartServer(cfg *api.ApiConfig) {
 	server.Handler = mux
 	server.Addr = ":8080"
 
-	log.Info().Msgf("now serving on 127.0.0.1:%s", server.Addr)
+	log.Info().Msgf("now serving at https://localhost:%s", server.Addr)
 	server.ListenAndServe()
 }

@@ -1,4 +1,4 @@
-package birds
+package api
 
 import (
 	"context"

@@ -15,6 +15,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	sessionExpiration = 600 * time.Second
+)
+
 func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("call to load bird handler")
 
@@ -34,7 +38,7 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 		LeftbirdID:   newLeftBird.ID,
 		RightbirdID:  newRightBird.ID,
 		SessionToken: sessionToken,
-		ExpiresAt:    time.Now().Add(600 * time.Second),
+		ExpiresAt:    time.Now().Add(sessionExpiration),
 		UserIp:       sql.NullString{String: r.RemoteAddr, Valid: true},
 		UserAgent:    sql.NullString{String: r.UserAgent(), Valid: true},
 	}
