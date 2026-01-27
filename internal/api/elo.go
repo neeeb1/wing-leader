@@ -26,22 +26,26 @@ func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("sessionToken")
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to read sessionToken cookie")
+		respondWithError(w, 400, "Failed to read sessionToken")
 		return
 	}
 
 	session, err := cfg.DbQueries.GetMatchSessionByToken(r.Context(), cookie.Value)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get session by token")
+		respondWithError(w, 400, "Failed to get session")
 		return
 	}
 
 	if session.Voted.Bool {
 		log.Error().Err(err).Msg("Session has already been voted on")
+		respondWithError(w, 401, "Session has already been voted on")
 		return
 	}
 
 	if time.Now().After(session.ExpiresAt) {
 		log.Error().Err(err).Msg("Session token has already expired")
+		respondWithError(w, 401, "Session has been expired")
 		return
 	}
 

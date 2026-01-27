@@ -25,6 +25,8 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 	rng_bird, err := cfg.DbQueries.GetRandomBirdWithImage(r.Context(), 2)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to get random birds with images")
+		respondWithError(w, 503, "Failed to get random birds with images")
+		return
 	}
 
 	newLeftBird, newRightBird := rng_bird[0], rng_bird[1]
@@ -32,6 +34,8 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 	sessionToken, err := auth.CreateSessionToken(32)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to generate new match session token")
+		respondWithError(w, 500, "Failed to get random birds with images")
+		return
 	}
 
 	sessionParams := database.CreateMatchSessionParams{
@@ -45,6 +49,7 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := cfg.DbQueries.CreateMatchSession(r.Context(), sessionParams); err != nil {
 		log.Error().Err(err).Msg("Failed to create match session db entry")
+		respondWithError(w, 503, "Failed to create match session db entry")
 		return
 	}
 
@@ -118,6 +123,7 @@ func (cfg *ApiConfig) handleLoadLeaderboard(w http.ResponseWriter, r *http.Reque
 	listLength, err := strconv.Atoi(r.URL.Query().Get("listLength"))
 	if err != nil {
 		log.Error().Err(err).Msg("failed to parse listLength")
+		respondWithError(w, 500, "Failed to parse listLength")
 		return
 	}
 
@@ -130,6 +136,7 @@ func (cfg *ApiConfig) handleLoadLeaderboard(w http.ResponseWriter, r *http.Reque
 	topBirds, err := cfg.DbQueries.GetTopRatings(r.Context(), int32(listLength))
 	if err != nil {
 		log.Error().Err(err).Msg("failed to get top ratings")
+		respondWithError(w, 503, "Failed to get top ratings")
 		return
 	}
 
@@ -163,7 +170,7 @@ func (cfg *ApiConfig) handleLoadLeaderboard(w http.ResponseWriter, r *http.Reque
 func (cfg *ApiConfig) handleCachedImage(w http.ResponseWriter, r *http.Request) {
 	imageURL := r.URL.Query().Get("url")
 	if imageURL == "" {
-		http.Error(w, "missing url parameter", http.StatusBadRequest)
+		respondWithError(w, 400, "missing url parameter")
 		return
 	}
 
@@ -176,6 +183,7 @@ func (cfg *ApiConfig) handleCachedImage(w http.ResponseWriter, r *http.Request) 
 	res, err := client.Get(cacheURL)
 	if err != nil {
 		http.Error(w, "failed to fetch image", http.StatusInternalServerError)
+		respondWithError(w, 500, "Failed to fetch image")
 		return
 	}
 	defer res.Body.Close()
