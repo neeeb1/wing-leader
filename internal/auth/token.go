@@ -15,13 +15,3 @@ func CreateSessionToken(length int) (string, error) {
 	}
 	return base64.URLEncoding.EncodeToString(bytes), nil
 }
-
-func DecodeSessionToken(cookie string) (string, error) {
-	bytes, err := base64.URLEncoding.DecodeString(cookie)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to decode session token")
-		return "", err
-	}
-	token := string(bytes)
-	return token, nil
-}
