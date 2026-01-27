@@ -43,7 +43,7 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 		log.Error().Err(err).Msg("Failed to marshal error response to json")
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(data)
-	w.Header().Set("Content-Type", "application/json")
 }
