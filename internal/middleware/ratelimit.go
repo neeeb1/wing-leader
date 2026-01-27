@@ -1,4 +1,4 @@
-package server
+package middleware
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/neeeb1/rate_birds/internal/api"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/time/rate"
 )
@@ -17,6 +16,14 @@ type IPRateLimiter struct {
 	mu    sync.RWMutex
 	rate  rate.Limit
 	burst int
+}
+
+func NewIPRateLimiter(r rate.Limit, b int) *IPRateLimiter {
+	return &IPRateLimiter{
+		ips:   make(map[string]*rate.Limiter),
+		rate:  r,
+		burst: b,
+	}
 }
 
 func (i *IPRateLimiter) GetLimiter(ip string) *rate.Limiter {
@@ -38,7 +45,7 @@ func (i *IPRateLimiter) Limit(next http.Handler) http.Handler {
 
 		if !limiter.Allow() {
 			log.Info().Msg(fmt.Sprintf("Client exceeded rate limit (%s)", ip))
-			api.RespondWithError(w, 429, "Rate limit exceeded")
+			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 			return
 		}
 

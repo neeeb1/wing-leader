@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/neeeb1/rate_birds/internal/database"
+	"github.com/neeeb1/rate_birds/internal/middleware"
 	"github.com/rs/zerolog/log"
 )
 
@@ -19,12 +20,21 @@ type ApiConfig struct {
 }
 
 func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {
+	voteLimiter := middleware.NewIPRateLimiter(5, 10)
+	leaderboardLimiter := middleware.NewIPRateLimiter(5, 10)
+
 	mux.Handle("/", http.FileServer(http.Dir("./web")))
 	//mux.Handle("/matches", http.HandlerFunc(cfg.handleLoadMatches))
-	mux.HandleFunc("GET /api/scorematch/", cfg.handleScoreMatch)
-	mux.HandleFunc("GET /api/leaderboard/", cfg.handleLoadLeaderboard)
+
+	mux.Handle("GET /api/scorematch/",
+		voteLimiter.Limit(http.HandlerFunc(cfg.handleScoreMatch)))
+
+	mux.Handle("GET /api/leaderboard/",
+		leaderboardLimiter.Limit(http.HandlerFunc(cfg.handleLoadLeaderboard)))
+
 	mux.HandleFunc("GET /api/image/", cfg.handleCachedImage)
 	mux.HandleFunc("GET /api/loadbirds/", cfg.handleLoadBirds)
+
 	mux.HandleFunc("GET /health/live", HandleLiveness)
 	mux.HandleFunc("GET /health/ready", cfg.HandleReadiness)
 }
