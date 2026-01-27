@@ -20,16 +20,16 @@ type ApiConfig struct {
 
 func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {
 	mux.Handle("/", http.FileServer(http.Dir("./web")))
+	//mux.Handle("/matches", http.HandlerFunc(cfg.handleLoadMatches))
 	mux.HandleFunc("GET /api/scorematch/", cfg.handleScoreMatch)
 	mux.HandleFunc("GET /api/leaderboard/", cfg.handleLoadLeaderboard)
 	mux.HandleFunc("GET /api/image/", cfg.handleCachedImage)
 	mux.HandleFunc("GET /api/loadbirds/", cfg.handleLoadBirds)
-	//mux.Handle("/matches", http.HandlerFunc(cfg.handleLoadMatches))
 	mux.HandleFunc("GET /health/live", HandleLiveness)
 	mux.HandleFunc("GET /health/ready", cfg.HandleReadiness)
 }
 
-func respondWithError(w http.ResponseWriter, code int, msg string) {
+func RespondWithError(w http.ResponseWriter, code int, msg string) {
 	type errorResponse struct {
 		Error string
 	}
