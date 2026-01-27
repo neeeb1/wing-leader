@@ -1,15 +1,17 @@
 package middleware
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/time/rate"
 )
+
+const cleanUpInterval = 1 * time.Hour
 
 type IPRateLimiter struct {
 	ips   map[string]*rate.Limiter
@@ -19,11 +21,14 @@ type IPRateLimiter struct {
 }
 
 func NewIPRateLimiter(r rate.Limit, b int) *IPRateLimiter {
-	return &IPRateLimiter{
+	limiter := &IPRateLimiter{
 		ips:   make(map[string]*rate.Limiter),
 		rate:  r,
 		burst: b,
 	}
+	go limiter.cleanup()
+	return limiter
+
 }
 
 func (i *IPRateLimiter) GetLimiter(ip string) *rate.Limiter {
@@ -44,7 +49,7 @@ func (i *IPRateLimiter) Limit(next http.Handler) http.Handler {
 		limiter := i.GetLimiter(ip)
 
 		if !limiter.Allow() {
-			log.Info().Msg(fmt.Sprintf("Client exceeded rate limit (%s)", ip))
+			log.Info().Msgf("Client exceeded rate limit (%s)", ip)
 			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 			return
 		}
@@ -60,4 +65,17 @@ func getIP(r *http.Request) string {
 
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 	return ip
+}
+
+func (i *IPRateLimiter) cleanup() {
+	log.Info().Msgf("Started ip cleanup routine for ratelimiter %v", i)
+	ticker := time.NewTicker(cleanUpInterval)
+
+	go func() {
+		for range ticker.C {
+			i.mu.Lock()
+			i.ips = make(map[string]*rate.Limiter)
+			i.mu.Unlock()
+		}
+	}()
 }
