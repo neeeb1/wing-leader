@@ -36,7 +36,10 @@ func cleanUpTokens(cfg *api.ApiConfig) {
 			case <-done:
 				return
 			case t := <-ticker.C:
-				cfg.DbQueries.CleanUpSessions(context.Background())
+				err := cfg.DbQueries.CleanUpSessions(context.Background())
+				if err != nil {
+					log.Error().Err(err).Msg("Failed to clean up expired tokens")
+				}
 				log.Info().Msgf("Cleaned up expired tokens at %v", t)
 			}
 		}
