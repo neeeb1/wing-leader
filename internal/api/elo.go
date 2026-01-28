@@ -15,8 +15,8 @@ import (
 
 const (
 	// k-factor, maximum rating change
-	k = 32
-	d = 400
+	k = 32.0
+	d = 400.0
 )
 
 func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
@@ -104,6 +104,7 @@ func (cfg *ApiConfig) ScoreMatch(winner, loser database.Bird) error {
 
 	tx, err := cfg.Db.BeginTx(ctx, nil)
 	if err != nil {
+		log.Error().Err(err).Msg("failed to begin sql transaction")
 		return fmt.Errorf("unable to start sql transaction: %w", err)
 	}
 
@@ -127,12 +128,11 @@ func (cfg *ApiConfig) ScoreMatch(winner, loser database.Bird) error {
 	}
 	loserRating := loserDb.Rating.Int32
 
-	winnerExpected, loserExpected := calculateExpected(int(winnerRating), int(loserRating))
-	winnerDelta := calculateDelta(winnerExpected, 1.0)
-	loserDelta := calculateDelta(loserExpected, 0.0)
+	winnerExpected, _ := calculateExpected(int(winnerRating), int(loserRating))
+	delta := calculateDelta(winnerExpected, 1.0)
 
-	winnerNewRating := winnerRating + winnerDelta
-	loserNewRating := loserRating + loserDelta
+	winnerNewRating := winnerRating + delta
+	loserNewRating := loserRating - delta
 
 	winParams := database.UpdateRatingByBirdIDParams{
 		Rating: sql.NullInt32{Int32: winnerNewRating, Valid: true},
@@ -173,8 +173,8 @@ func (cfg *ApiConfig) ScoreMatch(winner, loser database.Bird) error {
 }
 
 func calculateExpected(ratingA, ratingB int) (expectedA, expectedB float64) {
-	qA := math.Pow10(ratingA / d)
-	qB := math.Pow10(ratingB / d)
+	qA := math.Pow(10, float64(ratingA)/d)
+	qB := math.Pow(10, float64(ratingB)/d)
 
 	expectedA = qA / (qA + qB)
 	expectedB = qB / (qA + qB)
@@ -182,5 +182,5 @@ func calculateExpected(ratingA, ratingB int) (expectedA, expectedB float64) {
 }
 
 func calculateDelta(expected, actual float64) int32 {
-	return int32(k * (actual - expected))
+	return int32(math.Abs(k * (actual - expected)))
 }
