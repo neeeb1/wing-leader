@@ -120,17 +120,10 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 func (cfg *ApiConfig) handleLoadLeaderboard(w http.ResponseWriter, r *http.Request) {
 	log.Info().Msg("call to load leaderboard handler")
 
-	listLength, err := strconv.Atoi(r.URL.Query().Get("listLength"))
+	listLength, err := validateListLength(r.URL.Query().Get("listLength"))
 	if err != nil {
-		log.Error().Err(err).Msg("failed to parse listLength")
-		RespondWithError(w, 500, "Failed to parse listLength")
-		return
-	}
-
-	if listLength <= 0 || listLength > 1000 {
-		err := fmt.Errorf("listLength must be between 1-1000")
 		log.Error().Err(err).Msg("invalid listLength")
-		RespondWithError(w, 500, "Invalid listLength")
+		RespondWithError(w, 500, "invalid listLength: must be between 1-1000")
 		return
 	}
 
@@ -236,3 +229,16 @@ func (cfg *ApiConfig) handleCachedImage(w http.ResponseWriter, r *http.Request) 
 
 	w.Write([]byte(payload))
 } */
+
+func validateListLength(input string) (int, error) {
+	listLength, err := strconv.Atoi(input)
+	if err != nil {
+		return 0, fmt.Errorf("invalid format: %w", err)
+	}
+
+	if listLength <= 0 || listLength > 1000 {
+		return 0, fmt.Errorf("must be between 1-1000")
+	}
+
+	return listLength, nil
+}
