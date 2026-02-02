@@ -11,11 +11,10 @@ import (
 	"time"
 
 	"github.com/neeeb1/rate_birds/internal/database"
-	"github.com/neeeb1/rate_birds/internal/testdb"
 )
 
 func TestScoreMatch_Concurrent(t *testing.T) {
-	testDB, cleanup := testdb.SetupTestDB(t)
+	testDB, cleanup := database.SetupTestDB(t)
 	defer cleanup()
 
 	birds := testDB.SeedTestData(t, 2)
@@ -74,7 +73,7 @@ func TestScoreMatch_Concurrent(t *testing.T) {
 }
 
 func TestHandleScoreMatch_ExpiredSession(t *testing.T) {
-	testDB, cleanup := testdb.SetupTestDB(t)
+	testDB, cleanup := database.SetupTestDB(t)
 	defer cleanup()
 
 	birds := testDB.SeedTestData(t, 2)
@@ -118,7 +117,7 @@ func TestHandleScoreMatch_ExpiredSession(t *testing.T) {
 }
 
 func TestHandleScoreMatch_AlreadyVoted(t *testing.T) {
-	testDB, cleanup := testdb.SetupTestDB(t)
+	testDB, cleanup := database.SetupTestDB(t)
 	defer cleanup()
 
 	birds := testDB.SeedTestData(t, 2)
@@ -174,7 +173,7 @@ func TestHandleScoreMatch_AlreadyVoted(t *testing.T) {
 }
 
 func TestHandleScoreMatch_InvalidToken(t *testing.T) {
-	testDB, cleanup := testdb.SetupTestDB(t)
+	testDB, cleanup := database.SetupTestDB(t)
 	defer cleanup()
 
 	birds := testDB.SeedTestData(t, 2)

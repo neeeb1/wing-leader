@@ -1,4 +1,4 @@
-package testdb
+package database
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/pressly/goose"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -18,7 +17,7 @@ import (
 type TestDB struct {
 	Container *postgres.PostgresContainer
 	DB        *sql.DB
-	Queries   *database.Queries
+	Queries   *Queries
 	ConnStr   string
 }
 
@@ -59,7 +58,7 @@ func SetupTestDB(t *testing.T) (*TestDB, func()) {
 		t.Fatalf("Failed to run migrations: %v", err)
 	}
 
-	queries := database.New(db)
+	queries := New(db)
 
 	TestDB := &TestDB{
 		Container: pgContainer,
@@ -97,13 +96,13 @@ func runMigrations(t *testing.T, db *sql.DB) error {
 	return nil
 }
 
-func (db *TestDB) SeedTestData(t *testing.T, count int) []database.Bird {
+func (db *TestDB) SeedTestData(t *testing.T, count int) []Bird {
 	t.Helper()
 
-	birds := make([]database.Bird, 0, count)
+	birds := make([]Bird, 0, count)
 
 	for i := 0; i < count; i++ {
-		bird, err := db.Queries.CreateBird(context.Background(), database.CreateBirdParams{
+		bird, err := db.Queries.CreateBird(context.Background(), CreateBirdParams{
 			CommonName:     sql.NullString{String: fmt.Sprintf("Test Bird%d", i), Valid: true},
 			ScientificName: sql.NullString{String: fmt.Sprintf("Tesus birdus%d", i), Valid: true},
 			Family:         sql.NullString{String: "Testidae", Valid: true},
@@ -118,7 +117,7 @@ func (db *TestDB) SeedTestData(t *testing.T, count int) []database.Bird {
 			t.Fatalf("Failed to create test bird: %v", err)
 		}
 
-		err = db.Queries.PopulateRating(context.Background(), database.PopulateRatingParams{
+		err = db.Queries.PopulateRating(context.Background(), PopulateRatingParams{
 			BirdID:  bird.ID,
 			Rating:  sql.NullInt32{Int32: 1000, Valid: true},
 			Matches: sql.NullInt32{Int32: 0, Valid: true},

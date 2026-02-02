@@ -6,11 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/neeeb1/rate_birds/internal/testdb"
+	"github.com/neeeb1/rate_birds/internal/database"
 )
 
 func TestHealthReadiness_DBAvailable(t *testing.T) {
-	testDB, cleanup := testdb.SetupTestDB(t)
+	testDB, cleanup := database.SetupTestDB(t)
 	defer cleanup()
 
 	cfg := &ApiConfig{
@@ -37,7 +37,7 @@ func TestHealthReadiness_DBAvailable(t *testing.T) {
 }
 
 func TestHealthReadiness_DBUnavailable(t *testing.T) {
-	testDB, cleanup := testdb.SetupTestDB(t)
+	testDB, cleanup := database.SetupTestDB(t)
 	defer cleanup()
 
 	cfg := &ApiConfig{
