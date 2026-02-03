@@ -1,7 +1,6 @@
 package database
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"testing"
@@ -24,7 +23,7 @@ type TestDB struct {
 func SetupTestDB(t *testing.T) (*TestDB, func()) {
 	t.Helper()
 
-	ctx := context.Background()
+	ctx := t.Context()
 	pgContainer, err := postgres.Run(ctx,
 		"postgres:17-bookworm",
 		postgres.WithDatabase("testdb"),
@@ -102,7 +101,7 @@ func (db *TestDB) SeedTestData(t *testing.T, count int) []Bird {
 	birds := make([]Bird, 0, count)
 
 	for i := 0; i < count; i++ {
-		bird, err := db.Queries.CreateBird(context.Background(), CreateBirdParams{
+		bird, err := db.Queries.CreateBird(t.Context(), CreateBirdParams{
 			CommonName:     sql.NullString{String: fmt.Sprintf("Test Bird%d", i), Valid: true},
 			ScientificName: sql.NullString{String: fmt.Sprintf("Tesus birdus%d", i), Valid: true},
 			Family:         sql.NullString{String: "Testidae", Valid: true},
@@ -117,7 +116,7 @@ func (db *TestDB) SeedTestData(t *testing.T, count int) []Bird {
 			t.Fatalf("Failed to create test bird: %v", err)
 		}
 
-		err = db.Queries.PopulateRating(context.Background(), PopulateRatingParams{
+		err = db.Queries.PopulateRating(t.Context(), PopulateRatingParams{
 			BirdID:  bird.ID,
 			Rating:  sql.NullInt32{Int32: 1000, Valid: true},
 			Matches: sql.NullInt32{Int32: 0, Valid: true},

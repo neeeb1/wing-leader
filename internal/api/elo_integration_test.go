@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"net/http"
@@ -48,12 +47,12 @@ func TestScoreMatch_Concurrent(t *testing.T) {
 		}
 	}
 
-	rating0, err := testDB.Queries.GetRatingByBirdID(context.Background(), bird0.ID)
+	rating0, err := testDB.Queries.GetRatingByBirdID(t.Context(), bird0.ID)
 	if err != nil {
 		t.Fatalf("Failed to get bird0 rating: %v", err)
 	}
 
-	rating1, err := testDB.Queries.GetRatingByBirdID(context.Background(), bird1.ID)
+	rating1, err := testDB.Queries.GetRatingByBirdID(t.Context(), bird1.ID)
 	if err != nil {
 		t.Fatalf("Failed to get bird1 rating: %v", err)
 	}
@@ -82,7 +81,7 @@ func TestHandleScoreMatch_ExpiredSession(t *testing.T) {
 		DbQueries: testDB.Queries,
 	}
 
-	session, err := testDB.Queries.CreateMatchSession(context.Background(), database.CreateMatchSessionParams{
+	session, err := testDB.Queries.CreateMatchSession(t.Context(), database.CreateMatchSessionParams{
 		LeftbirdID:   birds[0].ID,
 		RightbirdID:  birds[1].ID,
 		SessionToken: "expired-token",
@@ -107,7 +106,7 @@ func TestHandleScoreMatch_ExpiredSession(t *testing.T) {
 		t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, rr.Code)
 	}
 
-	updatedSession, err := testDB.Queries.GetMatchSessionByToken(context.Background(), session.SessionToken)
+	updatedSession, err := testDB.Queries.GetMatchSessionByToken(t.Context(), session.SessionToken)
 	if err != nil {
 		t.Fatalf("Failed to get updated match session: %v", err)
 	}
@@ -126,7 +125,7 @@ func TestHandleScoreMatch_AlreadyVoted(t *testing.T) {
 		DbQueries: testDB.Queries,
 	}
 
-	session, err := testDB.Queries.CreateMatchSession(context.Background(), database.CreateMatchSessionParams{
+	session, err := testDB.Queries.CreateMatchSession(t.Context(), database.CreateMatchSessionParams{
 		LeftbirdID:   birds[0].ID,
 		RightbirdID:  birds[1].ID,
 		SessionToken: "already-voted-token",
@@ -155,7 +154,7 @@ func TestHandleScoreMatch_AlreadyVoted(t *testing.T) {
 		t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, rr.Code)
 	}
 
-	rating0, err := testDB.Queries.GetRatingByBirdID(context.Background(), birds[0].ID)
+	rating0, err := testDB.Queries.GetRatingByBirdID(t.Context(), birds[0].ID)
 	if err != nil {
 		t.Fatalf("Failed to get bird0 rating: %v", err)
 	}
@@ -163,7 +162,7 @@ func TestHandleScoreMatch_AlreadyVoted(t *testing.T) {
 		t.Errorf("Expected bird0 matches to be 1, got %d", rating0.Matches.Int32)
 	}
 
-	rating1, err := testDB.Queries.GetRatingByBirdID(context.Background(), birds[1].ID)
+	rating1, err := testDB.Queries.GetRatingByBirdID(t.Context(), birds[1].ID)
 	if err != nil {
 		t.Fatalf("Failed to get bird1 rating: %v", err)
 	}
@@ -200,11 +199,11 @@ func TestHandleScoreMatch_InvalidToken(t *testing.T) {
 	}
 
 	// Verify no votes were recorded
-	rating0, err := testDB.Queries.GetRatingByBirdID(context.Background(), birds[0].ID)
+	rating0, err := testDB.Queries.GetRatingByBirdID(t.Context(), birds[0].ID)
 	if err != nil {
 		t.Fatalf("Failed to get bird0 rating: %v", err)
 	}
-	rating1, err := testDB.Queries.GetRatingByBirdID(context.Background(), birds[1].ID)
+	rating1, err := testDB.Queries.GetRatingByBirdID(t.Context(), birds[1].ID)
 	if err != nil {
 		t.Fatalf("Failed to get bird1 rating: %v", err)
 	}
