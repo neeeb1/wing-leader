@@ -20,7 +20,6 @@ const (
 )
 
 func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
-	defer cfg.handleLoadBirds(w, r)
 	log.Info().Msg("call to score match handler")
 
 	cookie, err := r.Cookie("sessionToken")
@@ -97,6 +96,8 @@ func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
 		}
 		cfg.DbQueries.VoteMatch(r.Context(), voteParams)
 	}
+
+	cfg.handleLoadBirds(w, r)
 }
 
 func (cfg *ApiConfig) ScoreMatch(winner, loser database.Bird) error {

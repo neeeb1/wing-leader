@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/neeeb1/rate_birds/internal/database"
 )
 
@@ -139,7 +140,10 @@ func TestHandleScoreMatch_AlreadyVoted(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create already-voted match session: %v", err)
 	}
-	err = cfg.ScoreMatch(birds[0], birds[1])
+	_, err = cfg.DbQueries.VoteMatch(t.Context(), database.VoteMatchParams{
+		ID:           session.ID,
+		WinnerbirdID: uuid.NullUUID{UUID: birds[0].ID, Valid: true},
+	})
 	if err != nil {
 		t.Fatalf("Failed to mark session as voted: %v", err)
 	}
@@ -161,16 +165,22 @@ func TestHandleScoreMatch_AlreadyVoted(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get bird0 rating: %v", err)
 	}
-	if rating0.Matches.Int32 != 1 {
-		t.Errorf("Expected bird0 matches to be 1, got %d", rating0.Matches.Int32)
+	if rating0.Matches.Int32 != 0 {
+		t.Errorf("Expected bird0 matches to be 0, got %d", rating0.Matches.Int32)
+	}
+	if rating0.Rating.Int32 != 1000 {
+		t.Errorf("Expected bird0 rating to be 1000, got %d", rating0.Rating.Int32)
 	}
 
 	rating1, err := testDB.Queries.GetRatingByBirdID(t.Context(), birds[1].ID)
 	if err != nil {
 		t.Fatalf("Failed to get bird1 rating: %v", err)
 	}
-	if rating1.Matches.Int32 != 1 {
-		t.Errorf("Expected bird1 matches to be 1, got %d", rating1.Matches.Int32)
+	if rating1.Matches.Int32 != 0 {
+		t.Errorf("Expected bird1 matches to be 0, got %d", rating1.Matches.Int32)
+	}
+	if rating1.Rating.Int32 != 1000 {
+		t.Errorf("Expected bird1 rating to be 1000, got %d", rating1.Rating.Int32)
 	}
 }
 
