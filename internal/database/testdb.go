@@ -73,9 +73,6 @@ func SetupTestDB(t *testing.T) (*TestDB, func()) {
 		if err := pgContainer.Terminate(ctx); err != nil {
 			t.Errorf("Failed to terminate postgres container: %v", err)
 		}
-		if err := goose.Reset(db, "../../sql/schema"); err != nil {
-			t.Errorf("Failed to reset database schema: %v", err)
-		}
 	}
 
 	return TestDB, cleanup

@@ -1,6 +1,9 @@
 package auth
 
-import "testing"
+import (
+	"encoding/base64"
+	"testing"
+)
 
 func TestCreateSessionToken_Length(t *testing.T) {
 	cases := []struct {
@@ -20,7 +23,7 @@ func TestCreateSessionToken_Length(t *testing.T) {
 			t.Fatalf("CreateSessionToken(%d) returned error: %v", c.inputLength, err)
 		}
 
-		expectedLength := 4*(c.inputLength/3) + 4 // Base64 encoding length calculation
+		expectedLength := base64.URLEncoding.EncodedLen(c.inputLength) // Base64 encoding length calculation
 		if len(token) != expectedLength {
 			t.Errorf("CreateSessionToken(%d) = %d characters, want %d characters",
 				c.inputLength, len(token), expectedLength)

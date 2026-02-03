@@ -68,5 +68,4 @@ func TestUpdateRatingsByBirdID_IncrementMatches(t *testing.T) {
 	if rating.Matches.Int32 != 1 {
 		t.Errorf("Failed to increment matches after voting, expected 1 but got %d", rating.Matches.Int32)
 	}
-
 }

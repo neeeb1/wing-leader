@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -16,17 +17,19 @@ func TestCalculateExpected(t *testing.T) {
 		{1000, 1005}, // close ratings
 	}
 	for _, c := range cases {
-		expectedA, expectedB := calculateExpected(c.ratingA, c.ratingB)
-		if expectedA < 0 || expectedA > 1 {
-			t.Errorf("expectedA out of bounds: got %f", expectedA)
-		}
-		if expectedB < 0 || expectedB > 1 {
-			t.Errorf("expectedB out of bounds: got %f", expectedB)
-		}
-		sum := expectedA + expectedB
-		if sum >= 1.0001 || sum <= 0.9999 {
-			t.Errorf("expectedA + expectedB != 1: got %f", sum)
-		}
+		t.Run(fmt.Sprintf("%d_vs_%d", c.ratingA, c.ratingB), func(t *testing.T) {
+			expectedA, expectedB := calculateExpected(c.ratingA, c.ratingB)
+			if expectedA < 0 || expectedA > 1 {
+				t.Errorf("expectedA out of bounds: got %f", expectedA)
+			}
+			if expectedB < 0 || expectedB > 1 {
+				t.Errorf("expectedB out of bounds: got %f", expectedB)
+			}
+			sum := expectedA + expectedB
+			if sum >= 1.0001 || sum <= 0.9999 {
+				t.Errorf("expectedA + expectedB != 1: got %f", sum)
+			}
+		})
 	}
 }
 
@@ -43,10 +46,12 @@ func TestCalculateDelta(t *testing.T) {
 		{1000, 1005, 16}, // close ratings
 	}
 	for _, c := range cases {
-		expectedA, _ := calculateExpected(c.ratingA, c.ratingB)
-		delta := calculateDelta(expectedA, 1.0)
-		if delta != c.wantDelta {
-			t.Errorf("calculateDelta(%f, 1.0) = %d, want %d", expectedA, delta, c.wantDelta)
-		}
+		t.Run(fmt.Sprintf("%d_vs_%d", c.ratingA, c.ratingB), func(t *testing.T) {
+			expectedA, _ := calculateExpected(c.ratingA, c.ratingB)
+			delta := calculateDelta(expectedA, 1.0)
+			if delta != c.wantDelta {
+				t.Errorf("calculateDelta(%f, 1.0) = %d, want %d", expectedA, delta, c.wantDelta)
+			}
+		})
 	}
 }

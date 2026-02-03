@@ -57,6 +57,9 @@ func TestScoreMatch_Concurrent(t *testing.T) {
 		t.Fatalf("Failed to get bird1 rating: %v", err)
 	}
 
+	if rating0.Rating.Int32+rating1.Rating.Int32 != 2000 {
+		t.Errorf("Expected total rating 2000, got %d", rating0.Rating.Int32+rating1.Rating.Int32)
+	}
 	if rating0.Rating.Int32 <= 1000 {
 		t.Errorf("Expected bird0 rating > 1000, got %d", rating0.Rating.Int32)
 	}
