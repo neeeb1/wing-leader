@@ -73,7 +73,7 @@ func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
 		err := cfg.ScoreMatch(leftBird, rightBird)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to score match")
-			break
+			return
 		}
 
 		voteParams := database.VoteMatchParams{
@@ -87,7 +87,7 @@ func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
 		err := cfg.ScoreMatch(rightBird, leftBird)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to score match")
-			break
+			return
 		}
 
 		voteParams := database.VoteMatchParams{
