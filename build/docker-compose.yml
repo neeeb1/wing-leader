@@ -54,7 +54,7 @@ services:
     image: ghcr.io/kukymbr/goose-docker:3.26.0
     restart: no
     env_file:
-      - .env
+      - ./.env
     depends_on:
       postgres:
         condition: service_healthy
@@ -76,7 +76,7 @@ services:
       - cache-data:/tmp/imageproxy
     env_file:
       - ./.env
-    command: -addr ${IMAGEPROXY_ADDR} -cache ${IMAGEPROXY_CACHE} -forceCache
+    command: -addr ${IMAGEPROXY_ADDR} -cache memory:250:24h -forceCache -verbose
     depends_on:
       postgres:
         condition: service_healthy

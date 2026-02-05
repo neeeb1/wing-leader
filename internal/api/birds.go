@@ -134,6 +134,7 @@ func (cfg *ApiConfig) CacheImages() error {
 
 	var totalSuccess int
 	var totalFailure int
+	var totalBytes int64
 
 	client := &http.Client{
 		Timeout: cacheTimeoutSeconds * time.Second,
@@ -154,7 +155,7 @@ func (cfg *ApiConfig) CacheImages() error {
 				semaphore <- struct{}{}
 				defer func() { <-semaphore }()
 
-				cacheUrl := fmt.Sprintf("http://%s:1337/200x200,sc/%s", cfg.CacheHost, u)
+				cacheUrl := fmt.Sprintf("http://%s:1337/500x500,sc/%s", cfg.CacheHost, u)
 
 				res, err := client.Get(cacheUrl)
 				if err != nil {
@@ -165,7 +166,10 @@ func (cfg *ApiConfig) CacheImages() error {
 					return
 				}
 
-				io.Copy(io.Discard, res.Body)
+				written, err := io.Copy(io.Discard, res.Body)
+				if err != nil {
+					log.Error().Err(err).Msgf("error reading response body for url (%s)", u)
+				}
 				res.Body.Close()
 
 				if res.StatusCode == http.StatusNotFound {
@@ -179,6 +183,7 @@ func (cfg *ApiConfig) CacheImages() error {
 				log.Info().Msgf("Image cached (%s)", u)
 				mu.Lock()
 				totalSuccess += 1
+				totalBytes += written
 				mu.Unlock()
 			}(u)
 		}
@@ -188,6 +193,7 @@ func (cfg *ApiConfig) CacheImages() error {
 
 	log.Info().Msgf("Successfully cached %d images", totalSuccess)
 	log.Info().Msgf("%d images failed to cache", totalFailure)
+	log.Info().Msgf("Total bytes cached: %d", totalBytes)
 	timeElapsed := time.Since(startTime)
 	log.Debug().Msgf("Total cachine time: %s", timeElapsed)
 	log.Info().Msg("---* Initial image caching completed --*")
