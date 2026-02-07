@@ -4,11 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"io"
 	"math"
-	"net/http"
-	"sync"
-	"time"
 
 	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/rs/zerolog/log"
@@ -120,83 +116,5 @@ func (cfg *ApiConfig) PopulateRatingsDB() error {
 	} else {
 		log.Info().Msgf("Success - database contains %d rating entries", count)
 	}
-	return nil
-}
-
-func (cfg *ApiConfig) CacheImages() error {
-	log.Info().Msg("---* Starting initial image caching --*")
-	startTime := time.Now()
-
-	imageUrls, err := cfg.DbQueries.GetAllImageUrls(context.Background())
-	if err != nil {
-		return fmt.Errorf("failed to get all image urls in db: %s", err)
-	}
-
-	var totalSuccess int
-	var totalFailure int
-	var totalBytes int64
-
-	client := &http.Client{
-		Timeout: cacheTimeoutSeconds * time.Second,
-	}
-
-	semaphore := make(chan struct{}, maxConcurrent)
-
-	var wg sync.WaitGroup
-	var mu sync.Mutex
-
-	for _, urls := range imageUrls {
-		for _, u := range urls {
-			wg.Add(1)
-
-			go func(url string) {
-				defer wg.Done()
-
-				semaphore <- struct{}{}
-				defer func() { <-semaphore }()
-
-				cacheUrl := fmt.Sprintf("http://%s:1337/500x500,sc/%s", cfg.CacheHost, u)
-
-				res, err := client.Get(cacheUrl)
-				if err != nil {
-					log.Error().Err(err).Msgf("error caching image url (%s)", u)
-					mu.Lock()
-					totalFailure += 1
-					mu.Unlock()
-					return
-				}
-
-				written, err := io.Copy(io.Discard, res.Body)
-				if err != nil {
-					log.Error().Err(err).Msgf("error reading response body for url (%s)", u)
-				}
-				res.Body.Close()
-
-				if res.StatusCode == http.StatusNotFound {
-					log.Info().Msgf("response: not found for url (%s)", u)
-					mu.Lock()
-					totalFailure += 1
-					mu.Unlock()
-					return
-				}
-
-				log.Info().Msgf("Image cached (%s)", u)
-				mu.Lock()
-				totalSuccess += 1
-				totalBytes += written
-				mu.Unlock()
-			}(u)
-		}
-	}
-
-	wg.Wait()
-
-	log.Info().Msgf("Successfully cached %d images", totalSuccess)
-	log.Info().Msgf("%d images failed to cache", totalFailure)
-	log.Info().Msgf("Total bytes cached: %d", totalBytes)
-	timeElapsed := time.Since(startTime)
-	log.Debug().Msgf("Total cachine time: %s", timeElapsed)
-	log.Info().Msg("---* Initial image caching completed --*")
-
 	return nil
 }
