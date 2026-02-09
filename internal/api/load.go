@@ -67,7 +67,7 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 	payload := fmt.Sprintf(
-		`<div id="bird-wrapper" class="w-full max-w-6xl p-6 flex flex-row sm:flex-col gap-12 items-stretch justify-center">
+		`<div id="bird-wrapper" class="w-full max-w-6xl p-6 flex flex-col sm:flex-row gap-12 items-stretch justify-center">
 		<!-- Left Bird Card -->
 			<div class="flex-1 max-w-md shadow-lg rounded-lg p-6 flex flex-col bg-zinc-300" id="left-bird">
 				<div id="left-bird-content" class="flex-1 flex flex-col">
