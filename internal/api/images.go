@@ -58,10 +58,6 @@ func (cfg *ApiConfig) CacheImages() error {
 	var totalFailure int
 	var totalBytes int64
 
-	client := &http.Client{
-		Timeout: cacheTimeoutSeconds * time.Second,
-	}
-
 	semaphore := make(chan struct{}, maxConcurrent)
 
 	var wg sync.WaitGroup
@@ -79,7 +75,7 @@ func (cfg *ApiConfig) CacheImages() error {
 
 				cacheUrl := cfg.buildImageProxyURL(url)
 
-				res, err := client.Get(cacheUrl)
+				res, err := http.Get(cacheUrl)
 				if err != nil {
 					log.Error().Err(err).Msgf("error caching image url (%s)", url)
 					mu.Lock()

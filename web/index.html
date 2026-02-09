@@ -26,16 +26,16 @@
 					<div class="w-full aspect-square mb-4 overflow-hidden rounded-md bg-gray-100 flex items-center justify-center"
 						id="left-bird">
 						<img class="w-full h-full object-cover loading-shimmer" width="250" height="250"
-							src="/api/image?url=%s">
+							src="">
 					</div>
 					<div class="flex flex-col text-center mb-4">
-						<p>%s</p>
-						<p><em>%s</em></p>
+						<p></p>
+						<p><em></em></p>
 					</div>	
 					<button
 						class="rounded-md outline border-green-800 text-green-800 hover:border-transparent hover:bg-green-800 hover:text-white active:bg-green-900"
 						hx-get="/api/scorematch/" hx-trigger="click" hx-target="#bird-wrapper" hx-swap="outerHTML"
-						hx-vals='{"winner": "left", "leftBirdID": "%s", "rightBirdID": "%s"}'>
+						hx-vals='{"winner": "left", "leftBirdID": "", "rightBirdID": ""}'>
 						This one!
 					</button>
 				</div>
@@ -47,16 +47,16 @@
 					<div class="w-full aspect-square mb-4 overflow-hidden rounded-md bg-gray-100 flex items-center justify-center"
 						id="right-bird">
 						<img class="w-full h-full object-cover loading-shimmer" width="250" height="250"
-							src="/api/image?url=%s">
+							src="">
 					</div>
 					<div class="flex flex-col text-center mb-4">
-						<p>%s</p>
-						<p><em>%s</em></p>
+						<p></p>
+						<p><em></em></p>
 					</div>
 					<button
 						class="rounded-md outline border-green-800 text-green-800 hover:border-transparent hover:bg-green-800 hover:text-white active:bg-green-900"
 						hx-get="/api/scorematch/" hx-trigger="click" hx-target="#bird-wrapper" hx-swap="outerHTML"
-						hx-vals='{"winner": "right", "leftBirdID": "%s", "rightBirdID": "%s"}'>
+						hx-vals='{"winner": "right", "leftBirdID": "", "rightBirdID": ""}'>
 						This one!
 					</button>
 				</div>

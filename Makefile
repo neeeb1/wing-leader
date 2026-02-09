@@ -4,6 +4,7 @@ export
 BINARY_NAME=go-app
 
 build-app:
+	tailwindcss -i web/style.css -o web/output.css
 	go build -o ./bin/${BINARY_NAME} main.go
 
 run:
@@ -15,6 +16,7 @@ clean:
 	rm ./bin/${BINARY_NAME}
 
 compose-up:
+	tailwindcss -i web/style.css -o web/output.css
 	docker compose -f ./build/docker-compose.yml up --build -d
 
 compose-down:

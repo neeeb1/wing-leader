@@ -76,7 +76,7 @@ services:
       - cache-data:/tmp/imageproxy
     env_file:
       - ./.env
-    command: -addr ${IMAGEPROXY_ADDR} -cache memory:250:24h -forceCache -verbose
+    command: -addr ${IMAGEPROXY_ADDR} -cache memory:250:24h -forceCache -minCacheDuration 24h -verbose
     depends_on:
       postgres:
         condition: service_healthy
