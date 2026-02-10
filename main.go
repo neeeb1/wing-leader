@@ -3,7 +3,10 @@ package main
 import (
 	"context"
 	"database/sql"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -98,7 +101,31 @@ func main() {
 	}
 
 	// Start the server
-	server.StartServer(&apiCfg)
+	server, err := server.StartServer(&apiCfg)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to start server")
+		return
+	}
+
+	// Graceful shutdown
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal().Err(err).Msg("Server failed")
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatal().Err(err).Msg("Server forced shutdown")
+	}
+
+	log.Info().Msg("Server exited cleanly")
 }
 
 func isRunningInDockerContainer() bool {

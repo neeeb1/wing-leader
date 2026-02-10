@@ -11,7 +11,7 @@ import (
 
 const cleanUpInterval = 10 * time.Minute
 
-func StartServer(cfg *api.ApiConfig) {
+func StartServer(cfg *api.ApiConfig) (*http.Server, error) {
 	mux := http.NewServeMux()
 	api.RegisterEndpoints(mux, cfg)
 	cleanUpTokens(cfg)
@@ -22,7 +22,13 @@ func StartServer(cfg *api.ApiConfig) {
 	server.Addr = ":8080"
 
 	log.Info().Msgf("now serving at https://localhost:%s", server.Addr)
-	server.ListenAndServe()
+	err := server.ListenAndServe()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to start server")
+		return nil, err
+	}
+
+	return &server, nil
 }
 
 func cleanUpTokens(cfg *api.ApiConfig) {
