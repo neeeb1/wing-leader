@@ -12,11 +12,12 @@
 </head>
 
 <body>
-    <header class="header relative top-0 m-0 p-0 max-w-screen text-center bg-green-700">
-        <h3>Rate<em>(the)Birds</em></h3>
-        <a href="index.html" class="underline text-amber-300 hover:text-amber-100 justify-end">Home</a>
+    <header class="flex flex-col gap-2 header absolute top-0 m-0 p-4 w-screen text-center bg-green-700">
+        <h1 class="text-3xl font-bold text-white italic">Wing Leader</h1>
+        <h3 class="text-1xl font-bold text-white">Who's top of the flock?</h3>
+        <h3 class="text-amber-300 hover:text-amber-100 underline italic"><a href="index.html">Home</a></h3>
     </header>
-    <div class="flex p-2 items-center justify-center min-h-svh h-fit w-screen bg-amber-200">
+    <div class="flex p-2 items-center justify-center h-screen w-screen bg-amber-200">
         <div id="leaderboard-wrapper"
             class="flex flex-col mt-4 shadow-lg rounded-xl outline outline-green-800 items-center min-h-3/4 h-fit w-xl bg-green-500">
             <div class="leaderboard-header flex flex-col">
@@ -63,7 +64,7 @@
             </div>
         </div>
     </div>
-    <div class="footer relative inset-x-0 bottom-0 m-0 p-0 w-screen text-center bg-green-700">
+    <div class="footer absolute inset-x-0 bottom-0 m-0 p-0 w-screen text-center bg-green-700">
         <p>Copyright Neeeb | 2025</p>
     </div>
 </body>
