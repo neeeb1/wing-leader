@@ -85,11 +85,34 @@ services:
     networks:
       - go-app-network
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    depends_on:
+      - app
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/etc/prometheus/console_libraries
+      - --web.console.templates=/etc/prometheus/consoles
+      - --web.enable-lifecycle
+    expose:
+      - 9090
+    ports:
+      - 9090:9090
+    networks:
+      - go-app-network
+
 volumes:
   pg-data:
   caddy-config:
   caddy-data:
   cache-data:
+  prometheus_data:
 
 networks:
   go-app-network:
