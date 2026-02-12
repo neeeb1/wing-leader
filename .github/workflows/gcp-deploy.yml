@@ -7,6 +7,8 @@ on:
     branches: [main]
 
 jobs:
+  JOB-ID:
+    environment: GCP
   deploy:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
