@@ -19,7 +19,7 @@ jobs:
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v3'
         with:
-          project-id: 'wing-leader'
+          project_id: 'wing-leader'
           workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
 
       - name: 'Docker Auth'
