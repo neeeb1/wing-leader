@@ -68,6 +68,9 @@ func getIP(r *http.Request) string {
 }
 
 func (i *IPRateLimiter) cleanup() {
+	i.mu.RLock()
+	defer i.mu.RUnlock()
+
 	log.Info().Msgf("Started ip cleanup routine for ratelimiter %v", i)
 	ticker := time.NewTicker(cleanUpInterval)
 
