@@ -30,6 +30,7 @@ jobs:
       run: go test ./... -race -json > TestResults-${{ matrix.go-version }}.json
 
     - name: Upload test artifacts
+      if: always()
       uses: actions/upload-artifact@v4
       with:
         name: Go-results-${{ matrix.go-version }}
