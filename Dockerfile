@@ -1,7 +1,7 @@
 # Use Go 1.25 as base image
 FROM golang:1.25-bookworm AS base
 
-WORKDIR /build
+WORKDIR /
 
 COPY go.mod go.sum ./
 
