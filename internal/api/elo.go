@@ -103,9 +103,7 @@ func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
 func (cfg *ApiConfig) ScoreMatch(winner, loser database.Bird) error {
 	ctx := context.Background()
 
-	tx, err := cfg.Db.BeginTx(ctx, &sql.TxOptions{
-		Isolation: sql.LevelSerializable,
-	})
+	tx, err := cfg.Db.BeginTx(ctx, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to begin sql transaction")
 		return fmt.Errorf("unable to start sql transaction: %w", err)

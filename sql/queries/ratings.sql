@@ -24,7 +24,7 @@ matches = 0;
 
 -- name: GetRatingByBirdID :one
 SELECT * from ratings
-WHERE bird_id = $1;
+WHERE bird_id = $1 FOR UPDATE;
 
 -- name: UpdateRatingByBirdID :one
 UPDATE ratings

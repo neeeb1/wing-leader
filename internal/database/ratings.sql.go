@@ -27,7 +27,7 @@ func (q *Queries) Danger_ResetRatingsDB(ctx context.Context) error {
 
 const getRatingByBirdID = `-- name: GetRatingByBirdID :one
 SELECT id, created_at, updated_at, matches, rating, bird_id, common_name from ratings
-WHERE bird_id = $1
+WHERE bird_id = $1 FOR UPDATE
 `
 
 func (q *Queries) GetRatingByBirdID(ctx context.Context, birdID uuid.UUID) (Rating, error) {
