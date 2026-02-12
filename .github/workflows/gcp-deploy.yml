@@ -38,7 +38,7 @@ jobs:
       - name: 'Build and Push Container'
         run: |-
           DOCKER_TAG="${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.SERVICE }}:${{ github.sha }}"
-          docker build --tag "${DOCKER_TAG}" /build/Dockerfile
+          docker build --tag "${DOCKER_TAG}" build/
           docker push "${DOCKER_TAG}"
 
       - name: 'Deploy to Cloud Run'
