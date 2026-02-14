@@ -30,8 +30,7 @@ jobs:
           service_account: '${{ secrets.SERVICE_ACCOUNT }}'
 
       - name: 'Docker Auth'
-        uses: 'docker/login-action@v3'
-        with: |-
+        run: |-
           gcloud auth configure-docker ${{ vars.REGION }}-docker.pkg.dev
 
       - name: 'Build and Push Container'
