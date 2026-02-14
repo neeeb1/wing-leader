@@ -27,6 +27,7 @@ jobs:
         with:
           project_id: '${{ vars.PROJECT_ID }}'
           workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: '${{ secrets.SERVICE_ACCOUNT}}'
 
       - name: 'Docker Auth'
         uses: 'docker/login-action@v3'
@@ -39,7 +40,7 @@ jobs:
         run: |-
           DOCKER_TAG="${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.SERVICE }}:${{ github.sha }}"
           docker build --tag "${DOCKER_TAG}" .
-          docker push "${{ vars.PROJECT_ID }}"
+          docker push "${DOCKER_TAG}"
 
       - name: 'Deploy to Cloud Run'
         id: 'deploy'
