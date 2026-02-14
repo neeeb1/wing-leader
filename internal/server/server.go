@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/neeeb1/rate_birds/internal/api"
@@ -19,14 +20,14 @@ func StartServer(cfg *api.ApiConfig) (*http.Server, error) {
 	server := http.Server{}
 
 	server.Handler = mux
-	server.Addr = ":8080"
 
-	log.Info().Msgf("now serving at https://localhost:%s", server.Addr)
-	err := server.ListenAndServe()
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to start server")
-		return nil, err
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
+	server.Addr = ":" + port
+
+	log.Info().Msgf("Server configured to listen on port %s", port)
 
 	return &server, nil
 }
