@@ -41,7 +41,7 @@ func main() {
 	apiCfg := api.ApiConfig{}
 	apiCfg.NuthatcherApiKey = os.Getenv("NUTHATCH_KEY")
 	apiCfg.DbURL = os.Getenv("DB_URL")
-	apiCfg.CacheHost = os.Getenv("CACHE_HOST")
+	// apiCfg.CacheHost = os.Getenv("CACHE_HOST")
 
 	// Intialize database connection
 	// defer closing til program end
@@ -92,13 +92,13 @@ func main() {
 	}
 
 	// Start async caching of remote images
-	go func() {
-		err = apiCfg.CacheImages()
-	}()
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to cache remote images")
-		return
-	}
+	/* 	go func() {
+	   		err = apiCfg.CacheImages()
+	   	}()
+	   	if err != nil {
+	   		log.Fatal().Err(err).Msg("failed to cache remote images")
+	   		return
+	   	} */
 
 	// Start the server
 	server, err := server.StartServer(&apiCfg)

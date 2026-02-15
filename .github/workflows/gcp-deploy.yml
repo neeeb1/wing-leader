@@ -39,6 +39,11 @@ jobs:
           docker build --tag "${DOCKER_TAG}" .
           docker push "${DOCKER_TAG}"
 
+      - name: 'Run database migrations'
+        run: |-
+          go install github.com/pressly/goose/v3/cmd/goose@latest
+          goose -dir ./sql/schema postgres "${{ secrets.DB_URL }}" up
+
       - name: 'Deploy to Cloud Run'
         id: 'deploy'
         uses: 'google-github-actions/deploy-cloudrun@v2'
@@ -46,6 +51,10 @@ jobs:
           service: '${{ vars.SERVICE }}'
           region: '${{ vars.REGION }}'
           image: '${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.REPO }}/go-app:${{ github.sha }}'
+          env_vars: |-
+            DB_URL=${{ secrets.DB_URL }}
+            CACHE_HOST=${{ secrets.CACHE_HOST }}
+            NUTHATCH_KEY=${{ secrets.NUTHATCH_KEY }}
 
       - name: 'Show output'
         run: echo "${ steps.deploy.outputs.url }"

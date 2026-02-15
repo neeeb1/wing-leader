@@ -74,7 +74,7 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 					<div class="w-full aspect-square mb-4 overflow-hidden rounded-md bg-gray-100 flex items-center justify-center"
 						id="left-bird">
 						<img class="w-full h-full object-cover loading-shimmer" width="250" height="250"
-							src="/api/image?url=%s">
+							src="%s">
 					</div>
 					<div class="flex flex-col text-center mb-4">
 						<p>%s</p>
@@ -95,7 +95,7 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 					<div class="w-full aspect-square mb-4 overflow-hidden rounded-md bg-gray-100 flex items-center justify-center"
 						id="right-bird">
 						<img class="w-full h-full object-cover loading-shimmer" width="250" height="250"
-							src="/api/image?url=%s">
+							src="%s">
 					</div>
 					<div class="flex flex-col text-center mb-4">
 						<p>%s</p>
