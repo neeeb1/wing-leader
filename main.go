@@ -67,6 +67,11 @@ func main() {
 
 	log.Info().Msg("apicfg loaded")
 
+	if err = db.Ping(); err != nil {
+		log.Fatal().Err(err).Msg("Failed to ping db")
+		return
+	}
+
 	// Run database migrations
 	goose.SetBaseFS(embedMigrations)
 
