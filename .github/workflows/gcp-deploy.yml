@@ -84,8 +84,12 @@ jobs:
           region: '${{ secrets.REGION }}'
           image: '${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.REPO }}/go-app:${{ github.sha }}'
           env_vars: |-
-            DB_URL="postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PWD }}@${{ secrets.DB_IP }}:5432/${{ secrets.DB_NAME }}?${{ secrets.DB_SSLMODE }}"
             NUTHATCH_KEY=${{ secrets.NUTHATCH_KEY }}
+            INSTANCE_UNIX_SOCKET=/cloudsql/${{ secrets.PROJECT_ID }}:${{ secrets.REGION }}:${{ secrets.DB_INSTANCE }}
+            DB_USER=${{ secrets.POSTGRES_USER }}
+            DB_PASS=${{ secrets.POSTGRES_PWD }}
+            DB_NAME=${{ secrets.DB_NAME }}
+
 
       - name: 'Show output'
         run: echo "${ steps.deploy.outputs.url }"

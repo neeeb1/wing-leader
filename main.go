@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"embed"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -45,15 +46,13 @@ func main() {
 	// Configure api config
 	apiCfg := api.ApiConfig{}
 	apiCfg.NuthatcherApiKey = os.Getenv("NUTHATCH_KEY")
-	apiCfg.DbURL = os.Getenv("DB_URL")
 	// apiCfg.CacheHost = os.Getenv("CACHE_HOST")
 
 	// Intialize database connection
 	// defer closing til program end
-	db, err := sql.Open("postgres", apiCfg.DbURL)
+	db, err := connectUnixSocket()
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to open db")
-		return
+		log.Fatal().Err(err).Msg("Failed to connect to db via Unix Socket")
 	}
 	defer db.Close()
 
@@ -159,4 +158,31 @@ func isRunningInCloudRun() bool {
 	return os.Getenv("K_SERVICE") != "" ||
 		os.Getenv("K_REVISION") != "" ||
 		os.Getenv("K_CONFIGURATION") != ""
+}
+
+func connectUnixSocket() (*sql.DB, error) {
+	mustGetenv := func(key string) string {
+		env := os.Getenv(key)
+		if env == "" {
+			log.Fatal().Msgf("Fatal Error in connect_unix.go: %s environment variable not set.", key)
+		}
+		return env
+	}
+
+	var (
+		dbUser         = mustGetenv("DB_USER")              // e.g. 'my-db-user'
+		dbPwd          = mustGetenv("DB_PASS")              // e.g. 'my-db-password'
+		dbName         = mustGetenv("DB_NAME")              // e.g. 'my-database'
+		unixSocketPath = mustGetenv("INSTANCE_UNIX_SOCKET") // e.g. '/cloudsql/project:region:instance'
+	)
+
+	dbURI := fmt.Sprintf("user=%s password=%s database=%s host=%s",
+		dbUser, dbPwd, dbName, unixSocketPath)
+
+	dbPool, err := sql.Open("pgx", dbURI)
+	if err != nil {
+		return nil, fmt.Errorf("sql.Open: %w", err)
+	}
+
+	return dbPool, nil
 }
