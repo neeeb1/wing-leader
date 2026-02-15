@@ -25,19 +25,26 @@ jobs:
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v3'
         with:
-          project_id: '${{ vars.PROJECT_ID }}'
+          project_id: '${{ secrets.PROJECT_ID }}'
           workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
           service_account: '${{ secrets.SERVICE_ACCOUNT }}'
 
       - name: 'Docker Auth'
         run: |-
-          gcloud auth configure-docker ${{ vars.REGION }}-docker.pkg.dev
+          gcloud auth configure-docker ${{ secrets.REGION }}-docker.pkg.dev
 
       - name: 'Build and Push Container'
         run: |-
-          DOCKER_TAG="${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.REPO }}/go-app:${{ github.sha }}"
+          DOCKER_TAG="${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.REPO }}/go-app:${{ github.sha }}"
           docker build --tag "${DOCKER_TAG}" .
           docker push "${DOCKER_TAG}"
+
+      - name: 'Setup Cloud SQL Proxy'
+        run: |-
+          curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.21.0/cloud-sql-proxy.linux.amd64
+          chmod +x cloud-sql-proxy
+          ./cloud_sql_proxy -instances=${{ secrets.PROJECT_ID }}:${{ secrets.REGION }}:${{ secrets.DB_INSTANCE }}=tcp:5432 &
+          sleep 5  
 
       - name: 'Run database migrations'
         run: |-
@@ -48,12 +55,11 @@ jobs:
         id: 'deploy'
         uses: 'google-github-actions/deploy-cloudrun@v2'
         with:
-          service: '${{ vars.SERVICE }}'
-          region: '${{ vars.REGION }}'
-          image: '${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/${{ vars.REPO }}/go-app:${{ github.sha }}'
+          service: '${{ secrets.SERVICE }}'
+          region: '${{ secrets.REGION }}'
+          image: '${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.REPO }}/go-app:${{ github.sha }}'
           env_vars: |-
             DB_URL=${{ secrets.DB_URL }}
-            CACHE_HOST=${{ secrets.CACHE_HOST }}
             NUTHATCH_KEY=${{ secrets.NUTHATCH_KEY }}
 
       - name: 'Show output'
