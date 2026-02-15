@@ -27,7 +27,7 @@ var embedMigrations embed.FS
 func main() {
 	// Intialize zerolog and pretty console output
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: true, TimeLocation: time.FixedZone("PST", -8*60*60)})
 
 	// Perform a check to see if we are running in a docker container
 	// If not, load the .env file for local development
@@ -56,12 +56,7 @@ func main() {
 		return
 	}
 	defer db.Close()
-	// Confirm database is reachable
-	err = db.Ping()
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to ping db")
-		return
-	}
+
 	// Set database connection pool settings
 	db.SetMaxOpenConns(50)
 	db.SetMaxIdleConns(20)
