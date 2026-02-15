@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"embed"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,10 +15,14 @@ import (
 	"github.com/neeeb1/rate_birds/internal/api"
 	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/neeeb1/rate_birds/internal/server"
+	"github.com/pressly/goose/v3"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
+
+//go:embed sql/schema/*.sql
+var embedMigrations embed.FS
 
 func main() {
 	// Intialize zerolog and pretty console output
@@ -67,6 +72,19 @@ func main() {
 	apiCfg.DbQueries = database.New(db)
 
 	log.Info().Msg("apicfg loaded")
+
+	// Run database migrations
+	goose.SetBaseFS(embedMigrations)
+
+	if err := goose.SetDialect("postgres"); err != nil {
+		log.Fatal().Err(err).Msg("failed to set sql dialect")
+		return
+	}
+
+	if err := goose.Up(db, "sql/schema"); err != nil {
+		log.Fatal().Err(err).Msg("failed to run goose db migrations")
+		return
+	}
 
 	// Populate bird database if unintilaized
 	count, err := apiCfg.DbQueries.GetTotalBirdCount(context.Background())

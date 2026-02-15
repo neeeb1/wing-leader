@@ -7,55 +7,45 @@ on:
     branches: [main]
 
 jobs:
-  db_migrate:
-    environment: GCP
+#  db_migrate:
+#    environment: GCP
+#
+#    permissions:
+#      contents: 'read'
+#      id-token: 'write'
 
-    permissions:
-      contents: 'read'
-      id-token: 'write'
+#    runs-on: ubuntu-latest
+#    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+#    steps:
+#      - name: 'Checkout'
+#        uses: 'actions/checkout@v3'
 
-    steps:
-      - name: 'Checkout'
-        uses: 'actions/checkout@v3'
+#      - id: auth
+#        name: 'Authenticate to Google Cloud'
+#        uses: 'google-github-actions/auth@v3'
+#        with:
+#          project_id: '${{ secrets.PROJECT_ID }}'
+#          workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
+#          service_account: '${{ secrets.SERVICE_ACCOUNT }}'
 
-      - id: auth
-        name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v3'
-        with:
-          project_id: '${{ secrets.PROJECT_ID }}'
-          workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
-          service_account: '${{ secrets.SERVICE_ACCOUNT }}'
+#      - name: 'Setup Cloud SQL Proxy'
+#        run: |-
+#          curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.21.0/cloud-sql-proxy.linux.amd64
+#          chmod +x cloud-sql-proxy
+#          ./cloud-sql-proxy ${{ secrets.PROJECT_ID }}:${{ secrets.REGION }}:${{ secrets.DB_INSTANCE }} &
+#          sleep 5
 
-      - name: 'Setup Cloud SQL Proxy'
-        run: |-
-          curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.21.0/cloud-sql-proxy.linux.amd64
-          chmod +x cloud-sql-proxy
-          ./cloud-sql-proxy ${{ secrets.PROJECT_ID }}:${{ secrets.REGION }}:${{ secrets.DB_INSTANCE }} &
-          sleep 5
-
-      - name: 'Test proxy connection'
-        run: |-
-          # Check if proxy is listening
-          netstat -tulpn | grep 5432 || echo "Proxy not listening!"
-          # Try to connect with psql
-          sudo apt-get update && sudo apt-get install -y postgresql-client
-          psql "host=127.0.0.1 port=5432 user=${{ secrets.POSTGRES_USER }} dbname=${{ secrets.DB_NAME }} sslmode=disable" -c "SELECT 1;"
-        env:
-          PGPASSWORD: ${{ secrets.POSTGRES_PWD }}
-
-      - name: 'Run database migrations'
-        env:
-          GOOSE_DBSTRING: "host=127.0.0.1 port=5432 user=${{ secrets.POSTGRES_USER }} password=${{ secrets.POSTGRES_PWD }} dbname=${{ secrets.DB_NAME }} sslmode=disable"
-        run: |-
-          export PATH=$PATH:$(go env GOPATH)/bin
-          go install github.com/pressly/goose/v3/cmd/goose@latest
-          goose -dir ./sql/schema postgres up
+#      - name: 'Run database migrations'
+#        run: |-
+#          export PATH=$PATH:$(go env GOPATH)/bin
+#          go install github.com/pressly/goose/v3/cmd/goose@latest
+#          goose -dir ./sql/schema postgres up
 
   deploy:
-    needs: db_migrate
+    # needs: db_migrate
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
     environment: GCP
 
     permissions:
