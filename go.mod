@@ -4,6 +4,7 @@ go 1.25.1
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.11.1
 	github.com/pressly/goose v2.7.0+incompatible
@@ -22,6 +23,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
@@ -37,7 +39,9 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
+	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.6 // indirect
+	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.10 // indirect

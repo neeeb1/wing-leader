@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/jackc/pgx"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 	"github.com/neeeb1/rate_birds/internal/api"
 	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/neeeb1/rate_birds/internal/server"
