@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/jackc/pgx"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"github.com/neeeb1/rate_birds/internal/api"
 	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/neeeb1/rate_birds/internal/server"
@@ -179,7 +179,7 @@ func connectUnixSocket() (*sql.DB, error) {
 	dbURI := fmt.Sprintf("user=%s password=%s database=%s host=%s",
 		dbUser, dbPwd, dbName, unixSocketPath)
 
-	dbPool, err := sql.Open("pgx", dbURI)
+	dbPool, err := sql.Open("postgres", dbURI)
 	if err != nil {
 		return nil, fmt.Errorf("sql.Open: %w", err)
 	}
