@@ -47,10 +47,12 @@ jobs:
           sleep 5  
 
       - name: 'Run database migrations'
+        env:
+          GOOSE_DBSTRING: "host=127.0.0.1 port=5432 user=${{ secrets.POSTGRES_USER }} password=${{ secrets.POSTGRES_PWD }} dbname=${{ secrets.DB_NAME }}"
         run: |-
           export PATH=$PATH:$(go env GOPATH)/bin
           go install github.com/pressly/goose/v3/cmd/goose@latest
-          goose -dir ./sql/schema postgres "postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PWD }}@127.0.0.1:5432/${{ secrets.DB_NAME }}" up
+          goose -dir ./sql/schema postgres up
 
       - name: 'Deploy to Cloud Run'
         id: 'deploy'
