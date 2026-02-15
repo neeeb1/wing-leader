@@ -48,7 +48,7 @@ jobs:
 
       - name: 'Run database migrations'
         env:
-          GOOSE_DBSTRING: "host=127.0.0.1 port=5432 user=${{ secrets.POSTGRES_USER }} password=${{ secrets.POSTGRES_PWD }} dbname=${{ secrets.DB_NAME }}"
+          GOOSE_DBSTRING: "host=127.0.0.1 port=5432 user=${{ secrets.POSTGRES_USER }} password=${{ secrets.POSTGRES_PWD }} dbname=${{ secrets.DB_NAME }} sslmode=disable"
         run: |-
           export PATH=$PATH:$(go env GOPATH)/bin
           go install github.com/pressly/goose/v3/cmd/goose@latest
