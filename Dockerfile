@@ -1,7 +1,7 @@
 # Use Go 1.25 as base image
 FROM golang:1.25-bookworm AS base
 
-WORKDIR /
+WORKDIR /app
 
 COPY go.mod go.sum ./
 
@@ -13,5 +13,5 @@ RUN go build -o go-app
 
 EXPOSE 8080
 
-CMD ["/build/go-app"]
+CMD ["/app/go-app"]
 
