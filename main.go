@@ -31,7 +31,7 @@ func main() {
 
 	// Perform a check to see if we are running in a docker container
 	// If not, load the .env file for local development
-	if !isRunningInDockerContainer() {
+	if !isRunningInDockerContainer() && !isRunningInCloudRun() {
 		log.Info().Msg("Running locally, loading .env")
 		err := godotenv.Load()
 		if err != nil {
@@ -157,4 +157,11 @@ func isRunningInDockerContainer() bool {
 	}
 
 	return false
+}
+
+func isRunningInCloudRun() bool {
+	// Cloud Run sets these environment variables
+	return os.Getenv("K_SERVICE") != "" ||
+		os.Getenv("K_REVISION") != "" ||
+		os.Getenv("K_CONFIGURATION") != ""
 }
