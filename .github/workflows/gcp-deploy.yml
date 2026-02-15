@@ -48,6 +48,7 @@ jobs:
 
       - name: 'Run database migrations'
         run: |-
+          export PATH=$PATH:$(go env GOPATH)/bin
           go install github.com/pressly/goose/v3/cmd/goose@latest
           goose -dir ./sql/schema postgres "postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PWD }}@127.0.0.1:5432/${{ secrets.DB_NAME }}?${{ secrets.DB_SSLMODE }}" up
 
