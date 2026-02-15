@@ -83,6 +83,7 @@ jobs:
           service: '${{ secrets.SERVICE }}'
           region: '${{ secrets.REGION }}'
           image: '${{ secrets.REGION }}-docker.pkg.dev/${{ secrets.PROJECT_ID }}/${{ secrets.REPO }}/go-app:${{ github.sha }}'
+          flags: '--add-cloud-sql-instances=${{ secrets.PROJECT_ID }}:${{ secrets.REGION }}:${{ secrets.DB_INSTANCE }}
           env_vars: |-
             NUTHATCH_KEY=${{ secrets.NUTHATCH_KEY }}
             INSTANCE_UNIX_SOCKET=/cloudsql/${{ secrets.PROJECT_ID }}:${{ secrets.REGION }}:${{ secrets.DB_INSTANCE }}
