@@ -181,7 +181,7 @@ func connectUnixSocket() (*sql.DB, error) {
 		unixSocketPath = mustGetenv("INSTANCE_UNIX_SOCKET") // e.g. '/cloudsql/project:region:instance'
 	)
 
-	dbURI := fmt.Sprintf("user=%s password=%s database=%s host=%s",
+	dbURI := fmt.Sprintf("user=%s password=%s dbname=%s host=%s",
 		dbUser, dbPwd, dbName, unixSocketPath)
 
 	dbPool, err := sql.Open("postgres", dbURI)
