@@ -233,6 +233,9 @@
   .box-content {
     box-sizing: content-box;
   }
+  .contents {
+    display: contents;
+  }
   .flex {
     display: flex;
   }

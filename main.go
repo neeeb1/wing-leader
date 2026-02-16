@@ -26,6 +26,7 @@ import (
 var embedMigrations embed.FS
 
 func main() {
+	var err error
 	// Intialize zerolog and pretty console output
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: true, TimeLocation: time.FixedZone("PST", -8*60*60)})
@@ -46,13 +47,22 @@ func main() {
 	// Configure api config
 	apiCfg := api.ApiConfig{}
 	apiCfg.NuthatcherApiKey = os.Getenv("NUTHATCH_KEY")
-	// apiCfg.CacheHost = os.Getenv("CACHE_HOST")
 
 	// Intialize database connection
 	// defer closing til program end
-	db, err := connectUnixSocket()
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to connect to db via Unix Socket")
+	var db *sql.DB
+
+	if isRunningInCloudRun() {
+		db, err = connectUnixSocket()
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed to connect to db via Unix Socket")
+		}
+	} else {
+		apiCfg.DbURL = os.Getenv("DB_URL")
+		db, err = sql.Open("postgres", apiCfg.DbURL)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed to connect to db via conn string")
+		}
 	}
 	defer db.Close()
 
