@@ -90,7 +90,3 @@ jobs:
             DB_USER=${{ secrets.POSTGRES_USER }}
             DB_PASS=${{ secrets.POSTGRES_PWD }}
             DB_NAME=${{ secrets.DB_NAME }}
-
-
-      - name: 'Show output'
-        run: echo "${ steps.deploy.outputs.url }"
