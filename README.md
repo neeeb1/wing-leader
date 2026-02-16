@@ -1,181 +1,147 @@
-# **Rate Birds API** ✨
 
-## Overview
-The Rate Birds API is a high-performance Go-based backend system designed for a bird rating application. It serves dynamic HTML content to a frontend, manages bird data, and implements an Elo-like ranking algorithm in a PostgreSQL database, with type-safe query generation via `sqlc`.
+# Wing Leader 🦆 
 
-## Features
--   **Bird Data Ingestion**: Automatically fetches comprehensive bird information from the Nuthatch API on application startup, ensuring a rich dataset.
--   **Elo Rating System**: Implements a robust Elo rating algorithm to calculate and update bird scores based on head-to-head user ratings, reflecting their perceived "attractiveness" or "preference."
--   **Dynamic Leaderboard**: Provides real-time, sortable rankings of birds based on their Elo scores, delivered as HTML fragments for seamless frontend integration.
--   **Database Management**: Utilizes `sqlc` to generate type-safe Go code for interacting with the PostgreSQL database, enhancing data integrity and developer productivity.
--   **RESTful API & HTMX Support**: Exposes a clean API for bird matches and leaderboard data, designed to integrate effortlessly with HTMX-driven frontend components for a dynamic user experience without extensive JavaScript.
+[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go)](https://golang.org/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![Build and Test](https://github.com/neeeb1/rate_birds/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/neeeb1/rate_birds/actions/workflows/build-and-test.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/neeeb1/rate_birds)](https://goreportcard.com/report/github.com/neeeb1/rate_birds)
 
-## Getting Started
+Finally, a community-powered ELO matchmaking system for birds.
 
-### Installation
-To set up and run the Rate Birds API locally, follow these steps:
+Check it out at [wingleader.app](https://wingleader.app)
 
-1.  **Clone the Repository**:
+---
+
+Wing Leader is a full-stack web application that allows users to vote on bird species in head-to-head matches and assigns ratings based on the [traditional ELO rating algorithim](https://en.wikipedia.org/wiki/Elo_rating_system). Deployed to Google Cloud Platform via a Github actions CI/CD platform.
+
+
+Features
+-   **Type-safe SQL queries utilizing [sqlc](https://github.com/sqlc-dev/sqlc?tab=readme-ov-file)**
+-   **Database migrations via [goose](https://github.com/pressly/goose)**
+-   **Structured logging using [zerolog](https://github.com/rs/zerolog) for observability**
+-   **Lightweight static template generation using [HTMX](https://github.com/bigskysoftware/htmx)**
+-   **Serverless compute via [Google Cloud Run](https://cloud.google.com/run?hl=en)**
+-   **Session based vote tracking**
+-   **IP-based rate limiting**
+-   **Concurrent SQL safety**
+
+
+# 🏗 Local installation 
+
+**Pre-requisites**
+- [Docker](https://docs.docker.com/engine/install/)
+- [Make](https://www.gnu.org/software/make/)
+- [tailwindcss cli](https://tailwindcss.com/docs/installation/tailwind-cli)
+- [Nuthatch api key](https://nuthatch.lastelm.software/)
+
+
+1. Clone the repository
     ```bash
-    git clone https://github.com/neeeb1/rate_birds
-    cd rate_birds
+        git clone https://github.com/neeeb1/rate_birds
+        cd rate_birds
     ```
 
-2.  **Install Go**:
-    Ensure you have Go version 1.22 or higher installed. You can download it from [golang.org](https://golang.org/dl/).
-
-3.  **Install PostgreSQL**:
-    Set up a PostgreSQL database instance. For installation instructions, refer to the [official PostgreSQL documentation](https://www.postgresql.org/download/).
-
-4.  **Install `goose` for Migrations**:
+2. Update env with your nuthatch api key and the DB url, user, and password.
     ```bash
-    go install github.com/pressly/goose/v3/cmd/goose@latest
+    cp .env.example .env
+    vim .env
     ```
 
-5.  **Create Database and Apply Migrations**:
-    Create a new database for the project (e.g., `rate_birds_db`) and apply the schema migrations:
+2. Run the make command
     ```bash
-    # Replace <your_db_url> with your PostgreSQL connection string
-    # Example: postgres://user:password@host:port/database?sslmode=disable
-    goose -dir ./sql/schema postgres "<your_db_url>" up
+    make compose-up
     ```
 
-6.  **Install `sqlc`**:
-    This project uses `sqlc` to generate Go code from SQL queries.
-    ```bash
-    go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-    ```
-    Then, generate the database queries:
-    ```bash
-    sqlc generate
-    ```
+## 🌐 API Reference
 
-7.  **Fetch Dependencies**:
-    ```bash
-    go mod tidy
-    ```
-
-### Environment Variables
-The following environment variables are required to run the application. Create a `.env` file in the project root with these variables:
-
--   `NUTHATCH_KEY`: Your API key for the Nuthatch bird data API.
-    ```
-    NUTHATCH_KEY=your_nuthatch_api_key_here
-    ```
--   `DB_URL`: Your PostgreSQL database connection string.
-    ```
-    DB_URL=postgres://user:password@host:5432/rate_birds_db?sslmode=disable
-    ```
-
-## API Documentation
-
-### Base URL
-`http://localhost:8080/api`
+### Core Endpoints
 
 ### Endpoints
 
-#### GET /api/scorematch/
-Records the outcome of a bird match, updates the Elo ratings of the involved birds, and returns a new set of two random birds for the next rating interaction.
+#### `GET /api/loadbirds/`
+Returns HTML fragment with two random bird cards and creates session.
 
-**Request Query Parameters**:
--   `winner`: `string` ("left" or "right") - Indicates which of the two displayed birds was chosen as the winner.
--   `leftBirdID`: `UUID` - The unique identifier of the bird presented on the left card.
--   `rightBirdID`: `UUID` - The unique identifier of the bird presented on the right card.
 
-**Response**:
-HTML snippet representing a new bird-wrapper div containing two dynamically generated bird cards ready for the next rating match.
+#### `GET /api/scorematch/`
+Records vote, updates ELO ratings, returns new bird pair.
 
-```html
-<div id="bird-wrapper" class="w-screen h-3/4 grid grid-flow-col justify-items-center">
-    <div class="shadow-lg rounded-sm w-2/3 p-6 flex flex-col align-items-center bg-zinc-300" id="left-bird">
-        <img class="card-image object-cover aspect-square object-contain" src="[Image URL of new left bird]">
-        <div class="flex flex-col text-center">
-            <p>[Common Name of new left bird]</p>
-            <p><em>[Scientific Name of new left bird]</em></p>
-            <Button class="[CSS Classes]" hx-get="/api/scorematch/" hx-trigger="click" hx-target="#bird-wrapper" hx-swap="outerHTML" hx-vals='{"winner": "left", "leftBirdID": "[UUID of new left bird]", "rightBirdID": "[UUID of new right bird]"}'>
-                This one!
-            </Button>
-        </div>
-    </div>
-    <div class="card-separator inline-block self-center">OR</div>
-    <div class="shadow-lg rounded-sm w-2/3 p-6 flex flex-col align-items-center bg-zinc-300" id="right-bird">
-        <img  class="card-image object-cover aspect-square box-content" src="[Image URL of new right bird]">
-        <div class="flex flex-col text-center">
-            <p>[Common Name of new right bird]</p>
-            <p><em>[Scientific Name of new right bird]</em></p>
-            <Button class="[CSS Classes]" hx-get="/api/scorematch/" hx-trigger="click" hx-target="#bird-wrapper" hx-swap="outerHTML" hx-vals='{"winner": "right", "leftBirdID": "[UUID of new left bird]", "rightBirdID": "[UUID of new right bird]"}'>
-                This one!
-            </Button>
-        </div>
-    </div>
-</div>
-```
+**Query Params:**
+- `winner`: `left` | `right`
+- `leftBirdID`: UUID
+- `rightBirdID`: UUID
 
-**Errors**:
--   `400 Bad Request`: Returned if `winner` is not "left" or "right", or if `leftBirdID` or `rightBirdID` are not valid UUIDs.
--   `500 Internal Server Error`: Occurs due to database connection issues, failure to retrieve bird data, or errors during Elo rating calculation.
+**Headers:** `Cookie: sessionToken=<token>`
 
-#### GET /api/leaderboard/
-Retrieves a list of top-ranked birds based on their Elo scores. The list length can be specified by a query parameter.
+**Response:** New HTML fragment + new session cookie
 
-**Request Query Parameters**:
--   `listLength`: `integer` (e.g., `10`) - The maximum number of top-ranked birds to return in the leaderboard.
+**Error Codes:**
+- `400`: Invalid parameters or missing session
+- `401`: Session expired or already voted
+- `429`: Rate limit exceeded
 
-**Response**:
-HTML snippet representing a table of birds, ordered by their Elo rating in descending order.
+#### `GET /api/leaderboard/`
+Returns top N birds by ELO rating as HTML table.
 
-```html
-<table>
-    <tr>
-        <th>Ranking</th>
-        <th>Common Name</th>
-        <th>ELO Score</th>
-    </tr>
-    <tr>
-        <td>1.</td>
-        <td>American Kestrel</td>
-        <td>1550</td>
-    </tr>
-    <tr>
-        <td>2.</td>
-        <td>Northern Cardinal</td>
-        <td>1520</td>
-    </tr>
-    <tr>
-        <td>3.</td>
-        <td>Blue Jay</td>
-        <td>1490</td>
-    </tr>
-    <!-- ... more birds based on listLength ... -->
-</table>
-```
+**Query Params:**
+- `listLength`: Integer (1-1000)
 
-**Errors**:
--   `400 Bad Request`: Returned if `listLength` is not a valid integer.
--   `500 Internal Server Error`: Occurs due to database connection issues or errors retrieving ratings or bird details.
 
-## Usage
-Once the server is running, you can interact with the application:
+### Health Checks
 
-1.  **Start the Server**:
-    From the project root, execute:
-    ```bash
-    go run main.go
-    ```
-    The server will start on `http://localhost:8080`.
+| Endpoint | Purpose | Use Case |
+|----------|---------|----------|
+| `GET /health/live` | Liveness probe | K8s/Cloud Run liveness |
+| `GET /health/ready` | Readiness probe (DB ping) | K8s/Cloud Run readiness |
 
-2.  **Access the Rating Interface**:
-    Open your web browser and navigate to `http://localhost:8080`. You will be presented with two bird images. Click "This one!" under your preferred bird to rate it. The page will dynamically update with a new pair of birds.
+## 📈 Observability
 
-3.  **View the Leaderboard**:
-    Navigate to `http://localhost:8080/leaderboard.html` to see the current rankings of all rated birds. You can adjust the number of items displayed using the dropdown and "Reload" button.
+### Metrics & Monitoring
+- **Cloud Run Metrics:**
+  - Request count and latency (p50, p95, p99)
+  - Container instance count and CPU/memory utilization
+  - Billable container time
+  - Cold start frequency
 
-4.  **Direct API Interaction**:
-    You can also interact with the API endpoints directly using tools like `curl`:
-    -   Get the top 5 birds on the leaderboard:
-        ```bash
-        curl "http://localhost:8080/api/leaderboard?listLength=5"
-        ```
+- **Cloud SQL Metrics:**
+  - Connection count and connection errors
+  - Query execution time
+  - Database size and storage utilization
+  - Replication lag (if applicable)
+
+- **Cloudflare Analytics:**
+  - Global traffic distribution
+  - Cache hit ratio
+  - Threat detection and blocking
+  - DNS query volume
+
+### Logging
+- **Format:** Structured JSON (zerolog)
+- **Levels:** debug, info, warn, error
+- **Fields:** timestamp, level, message, request_id, user_ip, bird_ids
+- **Destination:** Cloud Logging (formerly Stackdriver)
+
+## 🛠️ Tech Stack
+
+### Backend
+- **Language:** Go 1.25
+- **Framework:** Standard library `net/http`
+- **Database:** PostgreSQL 17
+- **SQL Codegen:** [sqlc](https://sqlc.dev/)
+- **Migrations:** [Goose](https://github.com/pressly/goose)
+- **Logging:** [zerolog](https://github.com/rs/zerolog)
+
+### Frontend
+- **Hypermedia:** [HTMX](https://htmx.org/)
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
+- **No JavaScript framework** (HTMX handles interactivity)
+
+### Infrastructure
+- **Edge Network:** Cloudflare (DNS, DDoS, CDN)
+- **Compute:** Google Cloud Run (serverless containers)
+- **Database:** Cloud SQL (PostgreSQL 17)
+- **Container Registry:** Google Artifact Registry
+- **Monitoring:** Cloud Run metrics, Cloud SQL metrics, structured logging
+- **CI/CD:** GitHub Actions
+
+### External APIs
+- **[Nuthatch API](https://nuthatch.lastelm.software/):** Bird species data
 
 ## Technologies Used
 | Technology         | Description                                                               | Link                                                    |
