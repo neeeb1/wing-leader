@@ -22,6 +22,7 @@ Features
 -   **IP-based rate limiting**
 -   **Concurrent SQL safety**
 
+This project was built as a learning exercise
 
 # 🏗 Local installation 
 
@@ -121,7 +122,6 @@ Returns top N birds by ELO rating as HTML table.
 
 ### Backend
 - **Language:** Go 1.25
-- **Framework:** Standard library `net/http`
 - **Database:** PostgreSQL 17
 - **SQL Codegen:** [sqlc](https://sqlc.dev/)
 - **Migrations:** [Goose](https://github.com/pressly/goose)
@@ -130,7 +130,6 @@ Returns top N birds by ELO rating as HTML table.
 ### Frontend
 - **Hypermedia:** [HTMX](https://htmx.org/)
 - **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
-- **No JavaScript framework** (HTMX handles interactivity)
 
 ### Infrastructure
 - **Edge Network:** Cloudflare (DNS, DDoS, CDN)
@@ -143,23 +142,46 @@ Returns top N birds by ELO rating as HTML table.
 ### External APIs
 - **[Nuthatch API](https://nuthatch.lastelm.software/):** Bird species data
 
-## Technologies Used
-| Technology         | Description                                                               | Link                                                    |
-| :----------------- | :------------------------------------------------------------------------ | :------------------------------------------------------ |
-| **Go**             | Core language for the API backend, ensuring performance and concurrency.  | [golang.org](https://golang.org/)                       |
-| **PostgreSQL**     | Robust relational database for storing bird and rating data.              | [postgresql.org](https://www.postgresql.org/)           |
-| **`sqlc`**         | Generates type-safe Go code from SQL queries, improving development.      | [sqlc.dev](https://sqlc.dev/)                           |
-| **HTMX**           | Enables dynamic, interactive HTML interfaces with minimal JavaScript.     | [htmx.org](https://htmx.org/)                           |
-| **`go-dotenv`**    | Simple environment variable loading from `.env` files.                    | [github.com/joho/godotenv](https://github.com/joho/godotenv) |
-| **Nuthatch API**   | External REST API providing comprehensive bird species data.              | [nuthatch.lastelm.software](https://nuthatch.lastelm.software/) |
+## 🎓 Learning Outcomes
 
-## License
-This project is open-source and licensed under the MIT License.
+This project demonstrates:
 
+1. **Distributed Systems:** Handling concurrent database writes safely with transactions and row-level locking
+2. **Cloud-Native Architecture:** Stateless design, auto-scaling, health checks, graceful shutdown
+3. **Edge Computing:** Cloudflare integration for DDoS protection, CDN, and global distribution
+4. **Layered Architecture:** Clean separation of concerns (API → Business Logic → Data)
+5. **Testing Strategy:** Unit, integration, and concurrency tests with race detection
+6. **CI/CD:** Automated testing and deployment pipelines with Docker and Artifact Registry
+7. **Database Design:** Schema design, indexing, migrations, transaction management
+8. **API Design:** RESTful principles, hypermedia (HTMX), session-based state
+9. **Production Readiness:** Structured logging, metrics, error handling, security best practices
+10. **Cost Optimization:** Serverless compute with pay-per-use pricing model
+
+
+## 📝 Future Enhancements
+
+- [ ] Static page generation for each bird with more info and conservation links
+- [ ] CDN/image caching layer for bird images
+
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+
+## 🙏 Acknowledgments
+
+- **Nuthatch API** for comprehensive bird species data
+- **Boot.dev** for Go backend development curriculum
+- **HTMX** community for modern hypermedia patterns
+- **Go community** for excellent tooling ecosystem
 
 ---
 
-[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?style=for-the-badge&logo=go)](https://golang.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![HTMX](https://img.shields.io/badge/HTMX-3069C7?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZmlsbD0iI2ZmZiIgZD0iTTEwLjI2OSAyLjAyNWwtLjAzLS4wNzUtLjAwNC0uMDA4LS41NzYtMS42NDktLjAwNC0uMDA4LS4wMy0uMDc0LS4xNS0uMzcySDB2MjRsMTkuMDIzLjA1NS4wMDMtLjAwNS4wNzgtLjIwNy4wMjctLjA3NC4wMDQtLjAwOEw4Ljg4NCAyNC4wMDlsLS4wMDUtLjAwOHMtMy42LS4zMzUtNC43NzItLjQ0N2ExLjE5LjExOSAwIDAgMS0uNjEyLS43MDZjLS4xNjQtLjU2NC4xNDQtMS4yMDggLjcwOC0xLjM3Mi41NjQtLjE2NC43MDgtLjI1Mi44Mi0uNjc2LjE0NC0uNjE2LTIuMDA0LS44NzItMi43NTItLjk2LTEuNTU2LS4xODgtMS43MTItLjI5Ny0xLjk2OC0uMzkyLS44Mi4wMzYtMS42NC4wMzYtMi41Ni4zNzYtLjUwOC4yMDQtMS4wMy40ODctMS41NzYuODk5LS4xMy4xMDgtLjI1Mi4yMjgtLjM4OC4zNjQtLjIwOC4xODgtLjQyNC4zNzItLjY3Ni41NDQtLjYxMi40NDQtMS40OTYuNjI4LTIuMjQ0LjYwNC0uOTIyLS4wMzYtMS43ODQtLjI5Ny0yLjM5Mi0uNzU3LS41NDgtLjQzMi0uNzg0LTEuMDgtLjYyLTEuNTA5LjE2NC0uNDE2LjQ2OC0uNjI4LjcyOC0uNjg4LjI0LS4wNjQuNjUtLjA2NC45MDguMDcyLjE5Mi4xMDIuNTUyLjIyOC44NTYuNDA0LjI5Mi4xOC42MDQuMzY4LjkyOC41NC42NDQuMzQ4IDEuNjY4LjUzMiAyLjg1Mi4zMTYuNzk2LS4xNDggMS42ODQtLjQ3NiAyLjM4LS42OC41NzItLjE2LjkyLjIzNi45OC42NjQuMDY4LjQzMi0uMDcyLjcyLS40NTYuODQtLjM4NC4xMjgtLjg3Mi4wNTItMS4xMDgtLjA2OC0uOTg4LS41MDQtMi4xMDQtLjgxNi0zLjIxMi0uOTA4LS4wNzYtLjAwNC0uMDc2LS4wMDQtLjA5Mi0uMDA0aC02LjMzMnYtNS45Nmg1LjE0NmMzLjQ0LS4zNTIgNi4zMjgtLjQ3NiA4LjcwNC0uNzc2IDYuMjQtLjYxNiA4Ljg0OC0xLjgyIDguODQ4LTUuNjYgMC0zLjgxNi0yLjg4LTUuMjcyLTguNTQ4LTUuNzY0LTMuMjktLjI4NC03LjQ1Mi0uMzY4LTEwLjk1Ni0uMzg0LS4wMTYtLjAwNC0uMjctLjAwNC0uNjEyLS4wMDVsLS4wNzYtLjAwNGwtLjk3Ni0uMDQ4YTEuMTkyLjQ3NiAwIDAgMS0uNzg4LS40NzYgMS4wNiAxLjA2IDAgMCAxIC4wNDgtLjgyMWMuMDk2LS4zMTIuMjk2LS40NzYuNTg4LS41NDRsLjM5Ni0uMDk2LjcwNC0uMDQ0Yy44Mi0uMDk2IDEuOTM2LS4xNTEgMy4yMTYtLjE1MXoiLz48L3N2Zz4=)](https://htmx.org/)
-[![Readme was generated by Dokugen](https://img.shields.io/badge/Readme%20was%20generated%20by-Dokugen-brightgreen)](https://www.npmjs.com/package/dokugen)
+
+<div align="center">
+
+**Built with** ❤️ **by neeeb**
+
+
+</div>
