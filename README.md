@@ -22,9 +22,11 @@ Features
 -   **IP-based rate limiting**
 -   **Concurrent SQL safety**
 
-This project was built as a learning exercise
+## Motivation
 
-# 🏗 Local installation 
+This project was built as a learning excersie to familiarize myself with Golang backends, PostgreSQL, and CI/CD using Github Actions. More importantly, this project answers an age old question in an empiracal way using wisdom of the crowds - which is the best bird?
+
+## 🏗 Quick Start - Local installation 
 
 **Pre-requisites**
 - [Docker](https://docs.docker.com/engine/install/)
@@ -50,7 +52,7 @@ This project was built as a learning exercise
     make compose-up
     ```
 
-## 🌐 API Reference
+## 🌐 API Reference / Usage
 
 ### Core Endpoints
 
@@ -162,6 +164,17 @@ This project demonstrates:
 
 - [ ] Static page generation for each bird with more info and conservation links
 - [ ] CDN/image caching layer for bird images
+
+## 🤝 Contributing
+
+Contributions welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Run tests (`go test ./... -race`)
+4. Commit changes (`git commit -m 'Add amazing feature'`)
+5. Push to branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
 
 
 ## 📄 License
