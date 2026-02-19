@@ -35,6 +35,7 @@ func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {
 
 	mux.HandleFunc("GET /api/image/", cfg.handleCachedImage)
 	mux.HandleFunc("GET /api/loadbirds/", cfg.handleLoadBirds)
+	mux.HandleFunc("GET /bird/{id}", cfg.handleBirdDetail)
 
 	mux.HandleFunc("GET /health/live", HandleLiveness)
 	mux.HandleFunc("GET /health/ready", cfg.HandleReadiness)
