@@ -20,8 +20,13 @@
     </header>
 
     <!-- profile -->
-    <div id="profile-wrapper" hx-get="/api/detail" hx-trigger="load" hx-swap="outerHTML">
-        
+    <div id="profile-wrapper">
+        <img src="{{.Image}}">
+        <h1>{{.CommonName}}</h1>
+        <h3>{{.ScientificName}}</h3>
+        <p>{{.Family}}, {{.Order}}</p>
+        <p>Conservation status: {{.Status}}</p>
+        <p>Last Updated: {{.LastUpdated}}</p>
     </div>
 
     <!-- footer -->

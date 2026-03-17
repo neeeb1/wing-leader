@@ -15,6 +15,8 @@ import (
 var embedTemplates embed.FS
 
 func (cfg *ApiConfig) handleBirdDetail(w http.ResponseWriter, r *http.Request) {
+	log.Info().Msg("call to load detail handler")
+
 	param := r.PathValue("id")
 	birdID, err := uuid.Parse(param)
 	if err != nil {
@@ -28,6 +30,9 @@ func (cfg *ApiConfig) handleBirdDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	payload, err := buildBirdDetail(bird)
+	if err != nil {
+		log.Error().Err(err).Msgf("Unable to format template")
+	}
 
 	w.Write(payload.Bytes())
 }
@@ -35,14 +40,14 @@ func (cfg *ApiConfig) handleBirdDetail(w http.ResponseWriter, r *http.Request) {
 func buildBirdDetail(bird database.Bird) (bytes.Buffer, error) {
 	var payload bytes.Buffer
 
-	tmpl, err := template.ParseFS(embedTemplates, "detail.html")
+	tmpl, err := template.New("").ParseFS(embedTemplates, "templates/*.html")
 	if err != nil {
 		log.Error().Err(err).Msg("failed to build bird template")
 	}
 
 	// Time format string
 	// Mon Jan 2 15:04:05 MST 2006
-	err = tmpl.Execute(&payload, struct {
+	err = tmpl.ExecuteTemplate(&payload, "detail.html", struct {
 		LastUpdated    string
 		CommonName     string
 		ScientificName string
