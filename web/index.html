@@ -67,17 +67,17 @@
 
         <div id="leaderboard-wrapper"
             class="flex flex-col mt-8 static shadow-md rounded-xl outline outline-green-800 items-center h-fit w-md bg-green-600">
-            <div class="leaderboard-header">
-                <p>Visit the <a href="leaderboard.html"
-                        class="text-amber-300 hover:text-amber-100 underline italic">full leaderboard</a></p>
-            </div>
             <div class="leaderboard-list p-2" hx-trigger="load" hx-get="/api/leaderboard" hx-swap="innerHTML"
                 hx-vals='{"listLength": "10"}'>
-                <table>
+                <table class="table-auto">
+                    <caption class="caption-bottom">
+                        <p>Visit the <a href="leaderboard.html"
+                        class="text-amber-300 text-sm hover:text-amber-100 underline italic">full leaderboard</a></p>
+                    </caption>
                     <tr>
-                        <th>Ranking</th>
-                        <th>Common Name</th>
-                        <th>ELO Score</th>
+                        <th>Ranking<br> </th>
+                        <th>Common Name<br> </th>
+                        <th>ELO Score <a class="text-xs font-light text-amber-300 hover:text-amber-100 underline italic" href="https://en.wikipedia.org/wiki/Elo_rating_system">(What's this?)</a></th>
                     </tr>
                     <tr class="leaderboard-first">
                         <td>1.</td>
