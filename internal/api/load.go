@@ -66,55 +66,50 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, sessionCookie)
 
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
+
+	// TODO: Refactor to a template, similar to detail.html
 	payload := fmt.Sprintf(
-		`<div id="bird-wrapper" class="w-full max-w-6xl p-6 flex flex-col sm:flex-row gap-12 items-stretch justify-center">
-		<!-- Left Bird Card -->
-			<div class="flex-1 max-w-md shadow-lg rounded-lg p-6 flex flex-col bg-zinc-300" id="left-bird">
-				<div id="left-bird-content" class="flex-1 flex flex-col">
-					<div class="w-full aspect-square mb-4 overflow-hidden rounded-md bg-gray-100 flex items-center justify-center"
-						id="left-bird">
-						<img class="w-full h-full object-cover loading-shimmer" width="250" height="250"
-							src="%s">
-					</div>
-					<div class="flex flex-col text-center mb-4">
-						<p>%s</p>
-						<p><em>%s</em></p>
-					</div>	
-					<button
-						class="rounded-md outline border-green-800 text-green-800 hover:border-transparent hover:bg-green-800 hover:text-white active:bg-green-900"
-						hx-get="/api/scorematch/" hx-trigger="click" hx-target="#bird-wrapper" hx-swap="outerHTML"
-						hx-vals='{"winner": "left", "leftBirdID": "%s", "rightBirdID": "%s"}'>
-						This one!
-					</button>
+		`<div id="bird-wrapper">
+			<div class="bird-card" id="left-bird">
+				<div class="img-frame">
+					<img class="loading-shimmer" width="250" height="250" src="%s" alt="%s">
 				</div>
+				<div class="bird-info">
+					<p class="common-name">%s</p>
+					<p class="sci-name"><em>%s</em></p>
+				</div>
+				<button class="vote-btn"
+					hx-get="/api/scorematch/" hx-trigger="click" hx-target="#bird-wrapper" hx-swap="outerHTML"
+					hx-vals='{"winner": "left", "leftBirdID": "%s", "rightBirdID": "%s"}'>
+					Vote
+				</button>
 			</div>
-			
-			<!-- Right Bird Card -->
-			<div class="flex-1 max-w-md shadow-lg rounded-lg p-6 flex flex-col bg-zinc-300" id="right-bird">
-				<div id="right-bird-content" class="flex-1 flex flex-col">
-					<div class="w-full aspect-square mb-4 overflow-hidden rounded-md bg-gray-100 flex items-center justify-center"
-						id="right-bird">
-						<img class="w-full h-full object-cover loading-shimmer" width="250" height="250"
-							src="%s">
-					</div>
-					<div class="flex flex-col text-center mb-4">
-						<p>%s</p>
-						<p><em>%s</em></p>
-					</div>
-					<button
-						class="rounded-md outline border-green-800 text-green-800 hover:border-transparent hover:bg-green-800 hover:text-white active:bg-green-900"
-						hx-get="/api/scorematch/" hx-trigger="click" hx-target="#bird-wrapper" hx-swap="outerHTML"
-						hx-vals='{"winner": "right", "leftBirdID": "%s", "rightBirdID": "%s"}'>
-						This one!
-					</button>
+ 
+			<div class="vs-col">vs</div>
+ 
+			<div class="bird-card" id="right-bird">
+				<div class="img-frame">
+					<img class="loading-shimmer" width="250" height="250" src="%s" alt="%s">
 				</div>
-			</div>`,
+				<div class="bird-info">
+					<p class="common-name">%s</p>
+					<p class="sci-name"><em>%s</em></p>
+				</div>
+				<button class="vote-btn"
+					hx-get="/api/scorematch/" hx-trigger="click" hx-target="#bird-wrapper" hx-swap="outerHTML"
+					hx-vals='{"winner": "right", "leftBirdID": "%s", "rightBirdID": "%s"}'>
+					Vote
+				</button>
+			</div>
+		</div>`,
 		newLeftBird.ImageUrls[0],
+		newLeftBird.CommonName.String,
 		newLeftBird.CommonName.String,
 		newLeftBird.ScientificName.String,
 		newLeftBird.ID.String(),
 		newRightBird.ID.String(),
 		newRightBird.ImageUrls[0],
+		newRightBird.CommonName.String,
 		newRightBird.CommonName.String,
 		newRightBird.ScientificName.String,
 		newLeftBird.ID.String(),
@@ -148,7 +143,7 @@ func (cfg *ApiConfig) handleLoadLeaderboard(w http.ResponseWriter, r *http.Reque
 		row := fmt.Sprintf(
 			`<tr>
 				<td>%d.</td>
-				<td><a class="text-amber-300 hover:text-amber-100 decoration-dashed hover:underline italic" href="/bird/%s">%s</a></td>
+				<td><a class="lb-bird-link" href="/bird/%s">%s</a></td>
 				<td>%d</td>
 			</tr>
 			`,
