@@ -7,109 +7,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wing Leader</title>
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦩</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦩</text></svg>">
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
         integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
         crossorigin="anonymous"></script>
 </head>
 
 <body>
-    <header class="flex flex-col gap-4 header relative top-0 m-0 p-4 max-w-screen text-center bg-green-700">
-        <h1 class="text-3xl font-bold text-white italic">Wing Leader</h1>
-        <h3 class="text-1xl font-bold text-white">Who's top of the flock?</h3>
+
+    <div class="ticker">
+        <span class="ticker-inner">
+            ★ WELCOME TO WING LEADER ★ THE ULTIMATE BIRD RANKING EXPERIENCE * WHO'S TOP OF THE FLOCK? ★ VOTE NOW ★ ALL BIRDS, NO BEES * CALL YOUR MOTHER * WHO WILL REIGN SUPREME? ★ BIRDS ARE REAL, NEW STUDY FINDS &nbsp;&nbsp;&nbsp;&nbsp;
+        </span>
+    </div>
+
+    <header>
+        <h1>WING LEADER</h1>
+        <p>Who's top of the flock?</p>
     </header>
-    <div class="main flex flex-col p-2 items-center justify-center min-h-svh h-auto w-screen bg-amber-200">
+
+    <main>
+
+        <span class="section-label">Select Your Champion</span>
+
         <div id="bird-wrapper"
-            class="w-full max-w-6xl p-6 flex flex-row sm:flex-col gap-12 items-stretch justify-center"
             hx-get="/api/loadbirds/" hx-trigger="load" hx-target="#bird-wrapper" hx-swap="outerHTML">
 
-            <!-- Left Bird Card -->
-            <div class="flex-1 max-w-md shadow-lg rounded-lg p-6 flex flex-col bg-zinc-300" id="left-bird">
-                <div id="left-bird-content" class="flex-1 flex flex-col">
-                    <div class="w-full aspect-square mb-4 overflow-hidden rounded-md bg-gray-100 flex items-center justify-center"
-                        id="left-bird">
-                        <img class="w-full h-full object-cover loading-shimmer" width="250" height="250" src="">
-                    </div>
-                    <div class="flex flex-col text-center mb-4">
-                        <p></p>
-                        <p><em></em></p>
-                    </div>
-                    <button
-                        class="rounded-md outline border-green-800 text-green-800 hover:border-transparent hover:bg-green-800 hover:text-white active:bg-green-900"
-                        hx-get="/api/scorematch/" hx-trigger="click" hx-target="#bird-wrapper" hx-swap="outerHTML"
-                        hx-vals='{"winner": "left", "leftBirdID": "", "rightBirdID": ""}'>
-                        This one!
-                    </button>
+            <div class="bird-card" id="left-bird">
+                <div class="img-frame">
+                    <img class="loading-shimmer" width="250" height="250" src="" alt="">
                 </div>
+                <div class="bird-info">
+                    <p class="common-name"></p>
+                    <p class="sci-name"><em></em></p>
+                </div>
+                <button class="vote-btn"
+                    hx-get="/api/scorematch/" hx-trigger="click" hx-target="#bird-wrapper" hx-swap="outerHTML"
+                    hx-vals='{"winner": "left", "leftBirdID": "", "rightBirdID": ""}'>
+                    Vote
+                </button>
             </div>
 
-            <!-- Right Bird Card -->
-            <div class="flex-1 max-w-md shadow-lg rounded-lg p-6 flex flex-col bg-zinc-300" id="right-bird">
-                <div id="right-bird-content" class="flex-1 flex flex-col">
-                    <div class="w-full aspect-square mb-4 overflow-hidden rounded-md bg-gray-100 flex items-center justify-center"
-                        id="right-bird">
-                        <img class="w-full h-full object-cover loading-shimmer" width="250" height="250" src="">
-                    </div>
-                    <div class="flex flex-col text-center mb-4">
-                        <p></p>
-                        <p><em></em></p>
-                    </div>
-                    <button
-                        class="rounded-md outline border-green-800 text-green-800 hover:border-transparent hover:bg-green-800 hover:text-white active:bg-green-900"
-                        hx-get="/api/scorematch/" hx-trigger="click" hx-target="#bird-wrapper" hx-swap="outerHTML"
-                        hx-vals='{"winner": "right", "leftBirdID": "", "rightBirdID": ""}'>
-                        This one!
-                    </button>
+            <div class="vs-col">vs</div>
+
+            <div class="bird-card" id="right-bird">
+                <div class="img-frame">
+                    <img class="loading-shimmer" width="250" height="250" src="" alt="">
                 </div>
+                <div class="bird-info">
+                    <p class="common-name"></p>
+                    <p class="sci-name"><em></em></p>
+                </div>
+                <button class="vote-btn"
+                    hx-get="/api/scorematch/" hx-trigger="click" hx-target="#bird-wrapper" hx-swap="outerHTML"
+                    hx-vals='{"winner": "right", "leftBirdID": "", "rightBirdID": ""}'>
+                    Vote
+                </button>
             </div>
 
         </div>
 
-        <div id="leaderboard-wrapper"
-            class="flex flex-col mt-8 static shadow-md rounded-xl outline outline-green-800 items-center h-fit w-lg bg-green-600">
-            <table class="table-auto">
-                <caption class="caption-bottom">
-                    <p>Visit the <a href="leaderboard.html"
-                            class="text-amber-300 text-sm hover:text-amber-100 underline italic">full leaderboard</a>
-                    </p>
-                </caption>
+        <span class="section-label">Current Rankings</span>
+
+        <div id="leaderboard-wrapper">
+            <div class="lb-header">
+                <span class="lb-title">Top of the Flock</span>
+                <a href="/leaderboard.html" class="lb-link">see all →</a>
+            </div>
+            <table>
                 <thead>
                     <tr>
-                        <th>Ranking<br> </th>
-                        <th>Common Name<br> </th>
-                        <th>
+                        <th>#</th>
+                        <th>Common Name</th>
+                        <th style="text-align:right; position:relative; padding-bottom:1.5rem;">
                             ELO Score
-                            <sup>
-                                <a class="absolute left-0 text-xs font-light text-amber-300 hover:text-amber-100 decoration-dashed hover:underline italic whitespace-pre"
-                                    href="https://en.wikipedia.org/wiki/Elo_rating_system">( What's this? )</a>
-                            </sup>
+                            <span class="elo-sub">
+                                <a class="elo-link" href="https://en.wikipedia.org/wiki/Elo_rating_system">(what's this?)</a>
+                            </span>
                         </th>
                     </tr>
                 </thead>
                 <tbody hx-trigger="load" hx-get="/api/leaderboard" hx-swap="innerHTML" hx-vals='{"listLength": "10"}'>
-                    <tr class="leaderboard-first">
-                        <td>1.</td>
-                        <td>defaulticus maximus</td>
-                        <td>999999999</td>
-                    </tr>
-                    <tr class="leaderboard-second">
-                        <td>2.</td>
-                        <td>defaulticus medius</td>
-                        <td>999999998</td>
-                    </tr>
-                    <tr class="leaderboard-third">
-                        <td>3.</td>
-                        <td>defaulticus minimus</td>
-                        <td>999999997</td>
-                    </tr>
+                    <tr><td>1.</td><td>defaulticus maximus</td><td>999999999</td></tr>
+                    <tr><td>2.</td><td>defaulticus medius</td><td>999999998</td></tr>
+                    <tr><td>3.</td><td>defaulticus minimus</td><td>999999997</td></tr>
                 </tbody>
             </table>
         </div>
-    </div>
-    <div class="footer relative inset-x-0 bottom-0 m-0 p-4 w-screen text-center bg-green-700">
-        <p>Copyright Neeeb | 2025</p>
-    </div>
-</body>
 
+    </main>
+
+    <footer>
+        <p>Wing Leader &nbsp;·&nbsp; © Neeeb 2025 &nbsp;</p>
+    </footer>
+
+</body>
 </html>

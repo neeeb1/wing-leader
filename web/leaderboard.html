@@ -6,75 +6,79 @@
     <link rel="stylesheet" href="static/output.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wing Leader - Leaderboard</title>
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦩</text></svg>">
+    <title>Wing Leader — Leaderboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦩</text></svg>">
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
         integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
         crossorigin="anonymous"></script>
 </head>
 
-<body class="flex flex-col h-screen">
-    <header class="flex flex-col gap-2 top-0 m-0 p-4 w-screen text-center bg-green-700">
-        <h1 class="text-3xl font-bold text-white italic">Wing Leader</h1>
-        <h3 class="text-1xl font-bold text-white">Who's top of the flock?</h3>
-        <h3 class="text-amber-300 hover:text-amber-100 underline italic"><a href="index.html">Home</a></h3>
+<body>
+
+    <div class="ticker">
+        <span class="ticker-inner">
+            ★ WELCOME TO WING LEADER ★ THE ULTIMATE BIRD RANKING EXPERIENCE ★ VOTE NOW ★ ELO SYSTEM ACTIVE ★ WHO WILL REIGN SUPREME? ★ &nbsp;&nbsp;&nbsp;&nbsp;
+        </span>
+    </div>
+
+    <header>
+        <h1>WING LEADER</h1>
+        <p>Who's top of the flock?</p>
+        <a href="index.html" class="header-back-link">← back to voting</a>
     </header>
-    <div class="flex-1 flex justify-center overflow-auto bg-amber-200">
-        <div id="leaderboard-wrapper"
-            class="flex flex-col mt-4 shadow-lg rounded-xl outline outline-green-800 items-center min-h-3/4 h-fit w-xl bg-green-500">
-            <div class="leaderboard-header flex flex-col text-center mt-4 mb-8">
-                <p>Top of the flock</p>
-                <p>Items in list...
-                    <select name="listLength" class="accent-white bg-amber-100 rounded-sm">
-                        <option value="5">5</option>
-                        <option value="10" selected="selected">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                    <button
-                        class="bg-amber-100 px-2 rounded-md outline border-green-800 text-amber-600 hover:border-transparent hover:bg-green-800 hover:text-white active:bg-green-900"
-                        hx-trigger="click" hx-target="#leaderboard-list" hx-get="/api/leaderboard" hx-swap="innerHTML"
-                        hx-include="[name='listLength']"> Refresh list</button>
+
+    <main>
+
+        <div class="lb-controls">
+            <span>Show</span>
+            <select name="listLength">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+            <span>birds</span>
+            <button
+                hx-get="/api/leaderboard"
+                hx-trigger="click"
+                hx-target="#leaderboard-list"
+                hx-swap="innerHTML"
+                hx-include="[name='listLength']">
+                Refresh
+            </button>
+        </div>
+
+        <div id="leaderboard-wrapper">
+            <div class="lb-header">
+                <span class="lb-title">Top of the Flock</span>
             </div>
-            <table class="table-auto">
+            <table>
                 <thead>
                     <tr>
-                        <th>Ranking<br> </th>
-                        <th>Common Name<br> </th>
-                        <th>
+                        <th>#</th>
+                        <th>Common Name</th>
+                        <th style="text-align:right; position:relative; padding-bottom:1.5rem;">
                             ELO Score
-                            <sup>
-                                <a class="absolute left-0 text-xs font-light text-amber-300 hover:text-amber-100 decoration-dashed hover:underline italic whitespace-pre"
-                                    href="https://en.wikipedia.org/wiki/Elo_rating_system">( What's this? )</a>
-                            </sup>
+                            <span class="elo-sub">
+                                <a class="elo-link" href="https://en.wikipedia.org/wiki/Elo_rating_system">(what's this?)</a>
+                            </span>
                         </th>
                     </tr>
                 </thead>
-                <tbody hx-trigger="load" hx-get="/api/leaderboard" hx-swap="innerHTML" hx-vals='{"listLength": "10"}'>
-                    <tr class="leaderboard-first">
-                        <td>1.</td>
-                        <td>defaulticus maximus</td>
-                        <td>999999999</td>
-                    </tr>
-                    <tr class="leaderboard-second">
-                        <td>2.</td>
-                        <td>defaulticus medius</td>
-                        <td>999999998</td>
-                    </tr>
-                    <tr class="leaderboard-third">
-                        <td>3.</td>
-                        <td>defaulticus minimus</td>
-                        <td>999999997</td>
-                    </tr>
+                <tbody id="leaderboard-list" hx-trigger="load" hx-get="/api/leaderboard" hx-swap="innerHTML" hx-vals='{"listLength": "10"}'>
+                    <tr><td>1.</td><td>defaulticus maximus</td><td>999999999</td></tr>
+                    <tr><td>2.</td><td>defaulticus medius</td><td>999999998</td></tr>
+                    <tr><td>3.</td><td>defaulticus minimus</td><td>999999997</td></tr>
                 </tbody>
             </table>
         </div>
-    </div>
-    <div class="footer inset-x-0 bottom-0 m-0 p-0 w-screen text-center bg-green-700">
-        <p>Copyright Neeeb | 2025</p>
-    </div>
-</body>
 
+    </main>
+
+    <footer>
+        <p>Wing Leader &nbsp;·&nbsp; © Neeeb 2025 &nbsp;·&nbsp; All birds rated fairly</p>
+    </footer>
+
+</body>
 </html>
