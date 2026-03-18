@@ -148,11 +148,12 @@ func (cfg *ApiConfig) handleLoadLeaderboard(w http.ResponseWriter, r *http.Reque
 		row := fmt.Sprintf(
 			`<tr>
 				<td>%d.</td>
-				<td><a href=%s</td>
+				<td><a class="text-amber-300 hover:text-amber-100 decoration-dashed hover:underline italic" href="/bird/%s">%s</a></td>
 				<td>%d</td>
 			</tr>
 			`,
 			i+1,
+			rating.BirdID,
 			rating.CommonName.String,
 			rating.Rating.Int32,
 		)

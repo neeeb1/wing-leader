@@ -46,7 +46,7 @@ func (q *Queries) GetRatingByBirdID(ctx context.Context, birdID uuid.UUID) (Rati
 }
 
 const getTopRatings = `-- name: GetTopRatings :many
-SELECT ratings.id, ratings.matches, ratings.rating, birds.common_name, birds.scientific_name, birds.status from ratings
+SELECT ratings.id, ratings.matches, ratings.rating, ratings.bird_id, birds.common_name, birds.scientific_name, birds.status from ratings
 INNER JOIN birds ON ratings.bird_id = birds.id
 ORDER BY rating DESC
 LIMIT $1
@@ -56,6 +56,7 @@ type GetTopRatingsRow struct {
 	ID             uuid.UUID
 	Matches        sql.NullInt32
 	Rating         sql.NullInt32
+	BirdID         uuid.UUID
 	CommonName     sql.NullString
 	ScientificName sql.NullString
 	Status         sql.NullString
@@ -74,6 +75,7 @@ func (q *Queries) GetTopRatings(ctx context.Context, limit int32) ([]GetTopRatin
 			&i.ID,
 			&i.Matches,
 			&i.Rating,
+			&i.BirdID,
 			&i.CommonName,
 			&i.ScientificName,
 			&i.Status,

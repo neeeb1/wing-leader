@@ -45,6 +45,13 @@ func buildBirdDetail(bird database.Bird) (bytes.Buffer, error) {
 		log.Error().Err(err).Msg("failed to build bird template")
 	}
 
+	var imageUrl string
+	if len(bird.ImageUrls) <= 0 {
+		imageUrl = `https://placehold.co/600x600?text=Image\nNot\nFound&font=raleway`
+	} else {
+		imageUrl = bird.ImageUrls[0]
+	}
+
 	// Time format string
 	// Mon Jan 2 15:04:05 MST 2006
 	err = tmpl.ExecuteTemplate(&payload, "detail.html", struct {
@@ -62,7 +69,7 @@ func buildBirdDetail(bird database.Bird) (bytes.Buffer, error) {
 		bird.Family.String,
 		bird.Order.String,
 		bird.Status.String,
-		bird.ImageUrls[0],
+		imageUrl,
 	})
 	if err != nil {
 		return payload, err
