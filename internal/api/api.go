@@ -25,8 +25,9 @@ func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {
 	leaderboardLimiter := middleware.NewIPRateLimiter(5, 10)
 
 	mux.Handle("/", http.FileServer(http.Dir("./web")))
-	//mux.Handle("/matches", http.HandlerFunc(cfg.handleLoadMatches))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static"))))
 
+	//mux.Handle("/matches", http.HandlerFunc(cfg.handleLoadMatches))
 	mux.Handle("GET /api/scorematch/",
 		voteLimiter.Limit(http.HandlerFunc(cfg.handleScoreMatch)))
 
