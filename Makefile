@@ -13,3 +13,7 @@ compose-up:
 
 compose-down:
 	docker compose -f ./build/docker-compose.yml down
+
+compose-restart:
+	make compose-down
+	make compose-up

@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="output.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaderboard</title>
+    <title>Wing Leader - Leaderboard</title>
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"
         integrity="sha384-/TgkGk7p307TH7EXJDuUlgG3Ce1UVolAOFopFekQkkXihi5u/6OCvVKyz1W+idaz"
         crossorigin="anonymous"></script>
@@ -21,11 +21,10 @@
     <div class="flex-1 flex justify-center overflow-auto bg-amber-200">
         <div id="leaderboard-wrapper"
             class="flex flex-col mt-4 shadow-lg rounded-xl outline outline-green-800 items-center min-h-3/4 h-fit w-xl bg-green-500">
-            <div class="leaderboard-header flex flex-col">
+            <div class="leaderboard-header flex flex-col text-center mt-4 mb-8">
                 <p>Top of the flock</p>
-                <label for="items">Items in list...</label>
-                <div>
-                    <select name="listLength" class="accent-white">
+                    <p>Items in list...
+                    <select name="listLength" class="accent-white bg-amber-100 rounded-sm">
                         <option value="5">5</option>
                         <option value="10" selected="selected">10</option>
                         <option value="25">25</option>
@@ -33,23 +32,25 @@
                         <option value="100">100</option>
                     </select>
                     <button
-                        class="rounded-md outline border-green-800 text-green-800 hover:border-transparent hover:bg-green-800 hover:text-white active:bg-green-900"
+                        class="bg-amber-100 px-2 rounded-md outline border-green-800 text-amber-600 hover:border-transparent hover:bg-green-800 hover:text-white active:bg-green-900"
                         hx-trigger="click" hx-target="#leaderboard-list" hx-get="/api/leaderboard" hx-swap="innerHTML"
-                        hx-include="[name='listLength']">Reload...</button>
-                </div>
+                        hx-include="[name='listLength']"> Refresh list</button>
             </div>
-            <div id="leaderboard-list" class="leaderboard-list" hx-trigger="load" hx-get="/api/leaderboard"
-                hx-swap="innerHTML" hx-vals='{"listLength": "10"}'>
-                <table class="table-auto">
-                    <caption class="caption-bottom">
-                        <p>Visit the <a href="leaderboard.html"
-                        class="text-amber-300 text-sm hover:text-amber-100 underline italic">full leaderboard</a></p>
-                    </caption>
+            <table class="table-auto">
+                <thead>
                     <tr>
                         <th>Ranking<br> </th>
                         <th>Common Name<br> </th>
-                        <th>ELO Score <a class="text-xs font-light text-amber-300 hover:text-amber-100 underline italic" href="https://en.wikipedia.org/wiki/Elo_rating_system">(What's this?)</a></th>
+                        <th>
+                            ELO Score
+                            <sup>
+                                <a class="absolute left-0 text-xs font-light text-amber-300 hover:text-amber-100 decoration-dashed hover:underline italic whitespace-pre"
+                                    href="https://en.wikipedia.org/wiki/Elo_rating_system">( What's this? )</a>
+                            </sup>
+                        </th>
                     </tr>
+                </thead>
+                <tbody hx-trigger="load" hx-get="/api/leaderboard" hx-swap="innerHTML" hx-vals='{"listLength": "10"}'>
                     <tr class="leaderboard-first">
                         <td>1.</td>
                         <td>defaulticus maximus</td>
@@ -65,8 +66,8 @@
                         <td>defaulticus minimus</td>
                         <td>999999997</td>
                     </tr>
-                </table>
-            </div>
+                </tbody>
+            </table>
         </div>
     </div>
     <div class="footer inset-x-0 bottom-0 m-0 p-0 w-screen text-center bg-green-700">

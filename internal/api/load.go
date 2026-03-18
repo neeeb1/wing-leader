@@ -144,13 +144,11 @@ func (cfg *ApiConfig) handleLoadLeaderboard(w http.ResponseWriter, r *http.Reque
 	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 
 	var builder strings.Builder
-	builder.WriteString("<table>\n<tr><th>Rank</th><th>Common Name</th><th>ELO</th></tr>\n")
-
 	for i, rating := range topBirds {
 		row := fmt.Sprintf(
 			`<tr>
 				<td>%d.</td>
-				<td>%s</td>
+				<td><a href=%s</td>
 				<td>%d</td>
 			</tr>
 			`,
@@ -160,8 +158,6 @@ func (cfg *ApiConfig) handleLoadLeaderboard(w http.ResponseWriter, r *http.Reque
 		)
 		builder.WriteString(row)
 	}
-
-	builder.WriteString("</table>\n")
 
 	payload := builder.String()
 
