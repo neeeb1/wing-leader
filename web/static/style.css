@@ -41,14 +41,15 @@ body {
 }
 
 @keyframes marquee {
-    0%   { transform: translateX(100vw); }
-    100% { transform: translateX(-100%); }
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
 }
 
 .ticker-inner {
     display: inline-block;
     animation: marquee 24s linear infinite;
-}
+    white-space: nowrap;
+  }
 
 /* ── HEADER ── */
 header {
