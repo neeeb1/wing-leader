@@ -8,7 +8,6 @@ import (
 
 	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/neeeb1/rate_birds/internal/middleware"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 )
 
@@ -41,7 +40,7 @@ func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {
 	mux.HandleFunc("GET /health/live", HandleLiveness)
 	mux.HandleFunc("GET /health/ready", cfg.HandleReadiness)
 
-	mux.Handle("/metrics", promhttp.Handler())
+	//mux.Handle("/metrics", promhttp.Handler())
 }
 
 func RespondWithError(w http.ResponseWriter, code int, msg string) {
