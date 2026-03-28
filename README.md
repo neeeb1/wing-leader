@@ -15,16 +15,16 @@ Wing Leader is a full-stack web application that allows users to vote on bird sp
 Features
 -   **Type-safe SQL queries utilizing [sqlc](https://github.com/sqlc-dev/sqlc?tab=readme-ov-file)**
 -   **Database migrations via [goose](https://github.com/pressly/goose)**
--   **Structured logging using [zerolog](https://github.com/rs/zerolog) for observability**
+-   **Structured logging using [zerolog](https://github.com/rs/zerolog)**
 -   **Lightweight static template generation using [HTMX](https://github.com/bigskysoftware/htmx)**
 -   **Serverless compute via [Google Cloud Run](https://cloud.google.com/run?hl=en)**
 -   **Session based vote tracking**
--   **IP-based rate limiting**
+-   **IP rate limiting**
 -   **Concurrent SQL safety**
 
 ## Motivation
 
-This project was built as a learning excersie to familiarize myself with Golang backends, PostgreSQL, and CI/CD using Github Actions. More importantly, this project answers an age old question in an empiracal way using wisdom of the crowds - which is the best bird?
+This project was built as a learning exercise to familiarize myself with Golang backends, PostgreSQL, and CI/CD using Github Actions. More importantly, this project answers an age old question empirically using the wisdom of the crowds - which is the best bird?
 
 ## 🏗 Quick Start - Local installation 
 
@@ -47,51 +47,93 @@ This project was built as a learning excersie to familiarize myself with Golang 
     vim .env
     ```
 
-2. Run the make command
+3. Run the make command
     ```bash
     make compose-up
     ```
 
 ## 🌐 API Reference / Usage
-
-### Core Endpoints
-
+ 
 ### Endpoints
-
+ 
 #### `GET /api/loadbirds/`
-Returns HTML fragment with two random bird cards and creates session.
-
-
+Returns HTML fragment with two random bird cards and creates a session.
+ 
 #### `GET /api/scorematch/`
 Records vote, updates ELO ratings, returns new bird pair.
-
+ 
 **Query Params:**
 - `winner`: `left` | `right`
 - `leftBirdID`: UUID
 - `rightBirdID`: UUID
-
+ 
 **Headers:** `Cookie: sessionToken=<token>`
-
+ 
 **Response:** New HTML fragment + new session cookie
-
+ 
 **Error Codes:**
 - `400`: Invalid parameters or missing session
 - `401`: Session expired or already voted
 - `429`: Rate limit exceeded
-
+ 
 #### `GET /api/leaderboard/`
 Returns top N birds by ELO rating as HTML table.
-
+ 
 **Query Params:**
 - `listLength`: Integer (1-1000)
-
-
+ 
+#### `GET /bird/{id}`
+Returns a full-page HTML bird profile with species details (family, order, conservation status).
+ 
+#### `GET /api/image/`
+Proxies and caches bird images through the image cache layer.
+ 
+**Query Params:**
+- `url`: Original image URL
+ 
+ 
 ### Health Checks
-
+ 
 | Endpoint | Purpose | Use Case |
 |----------|---------|----------|
 | `GET /health/live` | Liveness probe | K8s/Cloud Run liveness |
 | `GET /health/ready` | Readiness probe (DB ping) | K8s/Cloud Run readiness |
+ 
+### Metrics (local dev only)
+ 
+| Endpoint | Purpose | Use Case |
+|----------|---------|----------|
+| `GET /metrics` | Prometheus metrics | Scraped by local Prometheus container |
+ 
+> **Note:** The `/metrics` endpoint is disabled in production to avoid exposing runtime internals (Go version, memory profile, goroutine count) to the public internet.
+
+## 🧪 Testing
+ 
+Tests run in CI via GitHub Actions with the `-race` flag enabled. Integration tests use [testcontainers-go](https://github.com/testcontainers/testcontainers-go) to spin up ephemeral PostgreSQL containers, ensuring tests run against a real database without external dependencies.
+ 
+```bash
+# Run all tests with race detection
+go test ./... -race
+ 
+# Run with coverage
+go test -cover ./...
+ 
+# Generate coverage HTML report
+go test -coverprofile=coverage.out ./...
+go tool cover -html=coverage.out
+```
+ 
+### Test coverage
+ 
+| Area | Tests | What it proves |
+|------|-------|----------------|
+| Concurrent voting | `TestScoreMatch_Concurrent` | Race condition handling, transaction safety |
+| Session auth | Expired, already-voted, invalid token | Auth boundary enforcement |
+| Rate limiting | Under limit, over limit, separate IPs | DoS prevention, per-IP isolation |
+| Session tokens | Length, uniqueness | Crypto/security correctness |
+| Health checks | DB available, DB unavailable | Cloud-native operational readiness |
+| Database queries | Top ratings ordering, match increment | Query correctness |
+| ELO calculations | Expected probability, delta | Algorithm correctness |
 
 ## 📈 Observability
 
@@ -118,7 +160,6 @@ Returns top N birds by ELO rating as HTML table.
 - **Format:** Structured JSON (zerolog)
 - **Levels:** debug, info, warn, error
 - **Fields:** timestamp, level, message, request_id, user_ip, bird_ids
-- **Destination:** Cloud Logging (formerly Stackdriver)
 
 ## 🛠️ Tech Stack
 
@@ -136,7 +177,7 @@ Returns top N birds by ELO rating as HTML table.
 ### Infrastructure
 - **Edge Network:** Cloudflare (DNS, DDoS, CDN)
 - **Compute:** Google Cloud Run (serverless containers)
-- **Database:** Cloud SQL (PostgreSQL 17)
+- **Database:** Cloud SQL (PostgreSQL)
 - **Container Registry:** Google Artifact Registry
 - **Monitoring:** Cloud Run metrics, Cloud SQL metrics, structured logging
 - **CI/CD:** GitHub Actions
@@ -162,20 +203,8 @@ This project demonstrates:
 
 ## 📝 Future Enhancements
 
-- [ ] Static page generation for each bird with more info and conservation links
+- [X] Static page generation for each bird with more info and conservation links
 - [ ] CDN/image caching layer for bird images
-
-## 🤝 Contributing
-
-Contributions welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Run tests (`go test ./... -race`)
-4. Commit changes (`git commit -m 'Add amazing feature'`)
-5. Push to branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
-
 
 ## 📄 License
 
