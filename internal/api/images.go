@@ -128,9 +128,23 @@ func (cfg *ApiConfig) CacheImages() error {
 					continue
 				}
 
-				// External URL — download and upload to Tigris
+				// External URL — check Tigris first before downloading
 				key := fmt.Sprintf("birds/%s/%d", bird.ID.String(), i)
 				tigrisURL := fmt.Sprintf("https://%s.t3.tigrisfiles.io/%s", cfg.BucketName, key)
+
+				_, headErr := cfg.S3Client.HeadObject(context.Background(), &s3.HeadObjectInput{
+					Bucket: aws.String(cfg.BucketName),
+					Key:    aws.String(key),
+				})
+				if headErr == nil {
+					// Already in Tigris, just fix the DB URL
+					newURLs = append(newURLs, tigrisURL)
+					changed = true
+					mu.Lock()
+					totalConverted++
+					mu.Unlock()
+					continue
+				}
 
 				if err := cfg.uploadImageToS3(u, key); err != nil {
 					log.Error().Err(err).Str("url", u).Str("key", key).Msg("failed to upload image to Tigris")
