@@ -148,6 +148,38 @@ func (q *Queries) GetBirdByID(ctx context.Context, id uuid.UUID) (Bird, error) {
 	return i, err
 }
 
+const getBirdsForCaching = `-- name: GetBirdsForCaching :many
+SELECT id, image_urls FROM birds WHERE image_urls IS NOT NULL
+`
+
+type GetBirdsForCachingRow struct {
+	ID        uuid.UUID
+	ImageUrls []string
+}
+
+func (q *Queries) GetBirdsForCaching(ctx context.Context) ([]GetBirdsForCachingRow, error) {
+	rows, err := q.db.QueryContext(ctx, getBirdsForCaching)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBirdsForCachingRow
+	for rows.Next() {
+		var i GetBirdsForCachingRow
+		if err := rows.Scan(&i.ID, pq.Array(&i.ImageUrls)); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRandomBird = `-- name: GetRandomBird :many
 SELECT id, created_at, updated_at, common_name, scientific_name, family, "order", status, image_urls from birds
 ORDER by RANDOM()
@@ -236,4 +268,18 @@ func (q *Queries) GetTotalBirdCount(ctx context.Context) (int64, error) {
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const updateBirdImageUrls = `-- name: UpdateBirdImageUrls :exec
+UPDATE birds SET image_urls = $2, updated_at = NOW() WHERE id = $1
+`
+
+type UpdateBirdImageUrlsParams struct {
+	ID        uuid.UUID
+	ImageUrls []string
+}
+
+func (q *Queries) UpdateBirdImageUrls(ctx context.Context, arg UpdateBirdImageUrlsParams) error {
+	_, err := q.db.ExecContext(ctx, updateBirdImageUrls, arg.ID, pq.Array(arg.ImageUrls))
+	return err
 }

@@ -20,6 +20,10 @@ const (
 )
 
 func (cfg *ApiConfig) handleScoreMatch(w http.ResponseWriter, r *http.Request) {
+	if cfg.DbQueries == nil {
+		RespondWithError(w, 503, "Database unavailable")
+		return
+	}
 	log.Info().Msg("call to score match handler")
 
 	cookie, err := r.Cookie("sessionToken")

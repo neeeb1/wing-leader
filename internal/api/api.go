@@ -6,6 +6,7 @@ import (
 
 	"net/http"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/neeeb1/rate_birds/internal/middleware"
 	"github.com/rs/zerolog/log"
@@ -16,7 +17,8 @@ type ApiConfig struct {
 	DbURL            string
 	DbQueries        *database.Queries
 	Db               *sql.DB
-	CacheHost        string
+	S3Client         *s3.Client
+	BucketName       string
 }
 
 func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {
@@ -33,7 +35,6 @@ func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {
 	mux.Handle("GET /api/leaderboard/",
 		leaderboardLimiter.Limit(http.HandlerFunc(cfg.handleLoadLeaderboard)))
 
-	mux.HandleFunc("GET /api/image/", cfg.handleCachedImage)
 	mux.HandleFunc("GET /api/loadbirds/", cfg.handleLoadBirds)
 	mux.HandleFunc("GET /bird/{id}", cfg.handleBirdDetail)
 

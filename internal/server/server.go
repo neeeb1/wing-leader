@@ -33,6 +33,9 @@ func StartServer(cfg *api.ApiConfig) (*http.Server, error) {
 }
 
 func cleanUpTokens(cfg *api.ApiConfig) {
+	if cfg.DbQueries == nil {
+		return
+	}
 	log.Info().Msg("Started token cleanup routine")
 	ticker := time.NewTicker(cleanUpInterval)
 	done := make(chan bool)

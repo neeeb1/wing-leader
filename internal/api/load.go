@@ -19,6 +19,10 @@ const (
 )
 
 func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
+	if cfg.DbQueries == nil {
+		RespondWithError(w, 503, "Database unavailable")
+		return
+	}
 	log.Info().Msg("call to load bird handler")
 
 	rng_bird, err := cfg.DbQueries.GetRandomBirdWithImage(r.Context(), 2)
@@ -102,13 +106,13 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 				</button>
 			</div>
 		</div>`,
-		newLeftBird.ImageUrls[0],
+		cfg.PresignImageURL(newLeftBird.ImageUrls[0]),
 		newLeftBird.CommonName.String,
 		newLeftBird.CommonName.String,
 		newLeftBird.ScientificName.String,
 		newLeftBird.ID.String(),
 		newRightBird.ID.String(),
-		newRightBird.ImageUrls[0],
+		cfg.PresignImageURL(newRightBird.ImageUrls[0]),
 		newRightBird.CommonName.String,
 		newRightBird.CommonName.String,
 		newRightBird.ScientificName.String,
@@ -120,6 +124,10 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *ApiConfig) handleLoadLeaderboard(w http.ResponseWriter, r *http.Request) {
+	if cfg.DbQueries == nil {
+		RespondWithError(w, 503, "Database unavailable")
+		return
+	}
 	log.Info().Msg("call to load leaderboard handler")
 
 	listLength, err := validateListLength(r.URL.Query().Get("listLength"))

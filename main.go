@@ -11,6 +11,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/neeeb1/rate_birds/internal/api"
@@ -27,16 +31,12 @@ var embedMigrations embed.FS
 
 func main() {
 	var err error
-	// Intialize zerolog and pretty console output
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: true, TimeLocation: time.FixedZone("PST", -8*60*60)})
 
-	// Perform a check to see if we are running in a docker container
-	// If not, load the .env file for local development
-	if !isRunningInDockerContainer() && !isRunningInCloudRun() {
+	if !isRunningInDockerContainer() && !isRunningInCloudRun() && !isRunningOnFly() {
 		log.Info().Msg("Running locally, loading .env")
-		err := godotenv.Load()
-		if err != nil {
+		if err := godotenv.Load(); err != nil {
 			log.Fatal().Err(err).Msg("Failed to load .env")
 			return
 		}
@@ -44,100 +44,115 @@ func main() {
 		log.Info().Msg("Running in container, skipping .env load")
 	}
 
-	// Configure api config
 	apiCfg := api.ApiConfig{}
 	apiCfg.NuthatcherApiKey = os.Getenv("NUTHATCH_KEY")
 
-	// Intialize database connection
-	// defer closing til program end
+	// sql.Open is fast (no network) — safe to do before server start
 	var db *sql.DB
-
 	if isRunningInCloudRun() {
 		db, err = connectUnixSocket()
 		if err != nil {
-			log.Fatal().Err(err).Msg("Failed to connect to db via Unix Socket")
+			log.Warn().Err(err).Msg("Failed to open db connection, starting without database")
 		}
 	} else {
 		apiCfg.DbURL = os.Getenv("DB_URL")
 		db, err = sql.Open("postgres", apiCfg.DbURL)
 		if err != nil {
-			log.Fatal().Err(err).Msg("Failed to connect to db via conn string")
+			log.Warn().Err(err).Msg("Failed to open db connection, starting without database")
+			db = nil
 		}
 	}
-	defer db.Close()
 
-	// Set database connection pool settings
-	db.SetMaxOpenConns(50)
-	db.SetMaxIdleConns(20)
-	db.SetConnMaxLifetime(10 * time.Minute)
-
-	// Add database to api config
-	apiCfg.Db = db
-	apiCfg.DbQueries = database.New(db)
-
-	log.Info().Msg("apicfg loaded")
-
-	if err = db.Ping(); err != nil {
-		log.Fatal().Err(err).Msg("Failed to ping db")
-		return
+	if db != nil {
+		defer db.Close()
+		db.SetMaxOpenConns(50)
+		db.SetMaxIdleConns(20)
+		db.SetConnMaxLifetime(10 * time.Minute)
+		apiCfg.Db = db
+		apiCfg.DbQueries = database.New(db)
 	}
 
-	// Run database migrations
-	goose.SetBaseFS(embedMigrations)
+	// S3 client init is fast (no network) — safe to do before server start
+	accessKeyID := os.Getenv("AWS_ACCESS_KEY_ID")
+	secretAccessKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
+	endpointURL := os.Getenv("AWS_ENDPOINT_URL_S3")
+	bucketName := os.Getenv("BUCKET_NAME")
 
-	if err := goose.SetDialect("postgres"); err != nil {
-		log.Fatal().Err(err).Msg("failed to set sql dialect")
-		return
-	}
-
-	if err := goose.Up(db, "sql/schema"); err != nil {
-		log.Fatal().Err(err).Msg("failed to run goose db migrations")
-		return
-	}
-
-	// Populate bird database if unintilaized
-	count, err := apiCfg.DbQueries.GetTotalBirdCount(context.Background())
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to count db entries")
-		return
-	}
-	if count == 0 {
-		err = apiCfg.PopulateBirdDB()
+	if accessKeyID != "" && secretAccessKey != "" && bucketName != "" {
+		s3Cfg, err := awsconfig.LoadDefaultConfig(context.Background(),
+			awsconfig.WithRegion("auto"),
+			awsconfig.WithCredentialsProvider(
+				credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, ""),
+			),
+		)
 		if err != nil {
-			log.Fatal().Err(err).Msg("failed to populate birds")
-			return
+			log.Warn().Err(err).Msg("failed to configure S3 client, image caching disabled")
+		} else {
+			apiCfg.S3Client = s3.NewFromConfig(s3Cfg, func(o *s3.Options) {
+				o.BaseEndpoint = aws.String(endpointURL)
+				o.UsePathStyle = true
+			})
+			apiCfg.BucketName = bucketName
+			log.Info().Str("bucket", bucketName).Msg("S3 client initialized for Tigris")
 		}
 	} else {
-		log.Info().Msg("Bird db already populated - skipping initial population...")
+		log.Info().Msg("Tigris env vars not set, image caching disabled")
 	}
 
-	// Populate ratings database
-	err = apiCfg.PopulateRatingsDB()
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to populate ratings")
-		return
-	}
-
-	// Start async caching of remote images
-	/* 	go func() {
-	   		err = apiCfg.CacheImages()
-	   	}()
-	   	if err != nil {
-	   		log.Fatal().Err(err).Msg("failed to cache remote images")
-	   		return
-	   	} */
-
-	// Start the server
-	server, err := server.StartServer(&apiCfg)
+	// Start server immediately before slow network operations
+	srv, err := server.StartServer(&apiCfg)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to start server")
 		return
 	}
 
-	// Graceful shutdown
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal().Err(err).Msg("Server failed")
+		}
+	}()
+
+	// Slow startup tasks run in background after server is already listening
+	go func() {
+		if db != nil {
+			if err := db.Ping(); err != nil {
+				log.Warn().Err(err).Msg("Failed to ping db — data endpoints may fail until DB is reachable")
+			}
+
+			goose.SetBaseFS(embedMigrations)
+			if err := goose.SetDialect("postgres"); err != nil {
+				log.Fatal().Err(err).Msg("failed to set sql dialect")
+				return
+			}
+			if err := goose.Up(db, "sql/schema"); err != nil {
+				log.Fatal().Err(err).Msg("failed to run goose db migrations")
+				return
+			}
+
+			count, err := apiCfg.DbQueries.GetTotalBirdCount(context.Background())
+			if err != nil {
+				log.Fatal().Err(err).Msg("failed to count db entries")
+				return
+			}
+			if count == 0 {
+				if err = apiCfg.PopulateBirdDB(); err != nil {
+					log.Fatal().Err(err).Msg("failed to populate birds")
+					return
+				}
+			} else {
+				log.Info().Msg("Bird db already populated - skipping initial population...")
+			}
+
+			if err = apiCfg.PopulateRatingsDB(); err != nil {
+				log.Fatal().Err(err).Msg("failed to populate ratings")
+				return
+			}
+		} else {
+			log.Warn().Msg("Starting without database — data endpoints will return 503")
+		}
+
+		if err := apiCfg.CacheImages(); err != nil {
+			log.Error().Err(err).Msg("image caching failed")
 		}
 	}()
 
@@ -148,7 +163,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	if err := server.Shutdown(ctx); err != nil {
+	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatal().Err(err).Msg("Server forced shutdown")
 	}
 
@@ -156,23 +171,20 @@ func main() {
 }
 
 func isRunningInDockerContainer() bool {
-	// docker creates a .dockerenv file at the root
-	// of the directory tree inside the container.
-	// if this file exists then the viewer is running
-	// from inside a container so return true
-
 	if _, err := os.Stat("/.dockerenv"); err == nil {
 		return true
 	}
-
 	return false
 }
 
 func isRunningInCloudRun() bool {
-	// Cloud Run sets these environment variables
 	return os.Getenv("K_SERVICE") != "" ||
 		os.Getenv("K_REVISION") != "" ||
 		os.Getenv("K_CONFIGURATION") != ""
+}
+
+func isRunningOnFly() bool {
+	return os.Getenv("FLY_APP_NAME") != ""
 }
 
 func connectUnixSocket() (*sql.DB, error) {
@@ -185,10 +197,10 @@ func connectUnixSocket() (*sql.DB, error) {
 	}
 
 	var (
-		dbUser         = mustGetenv("DB_USER")              // e.g. 'my-db-user'
-		dbPwd          = mustGetenv("DB_PASS")              // e.g. 'my-db-password'
-		dbName         = mustGetenv("DB_NAME")              // e.g. 'my-database'
-		unixSocketPath = mustGetenv("INSTANCE_UNIX_SOCKET") // e.g. '/cloudsql/project:region:instance'
+		dbUser         = mustGetenv("DB_USER")
+		dbPwd          = mustGetenv("DB_PASS")
+		dbName         = mustGetenv("DB_NAME")
+		unixSocketPath = mustGetenv("INSTANCE_UNIX_SOCKET")
 	)
 
 	dbURI := fmt.Sprintf("user=%s password=%s dbname=%s host=%s",

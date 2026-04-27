@@ -18,6 +18,12 @@ func HandleLiveness(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *ApiConfig) HandleReadiness(w http.ResponseWriter, r *http.Request) {
+	if cfg.Db == nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		json.NewEncoder(w).Encode(HealthStatus{Status: "unavailable"})
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 	defer cancel()
 

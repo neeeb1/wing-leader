@@ -36,3 +36,9 @@ SELECT count(*) from birds;
 
 -- name: GetAllImageUrls :many
 SELECT image_urls from birds WHERE image_urls IS NOT NULL;
+
+-- name: GetBirdsForCaching :many
+SELECT id, image_urls FROM birds WHERE image_urls IS NOT NULL;
+
+-- name: UpdateBirdImageUrls :exec
+UPDATE birds SET image_urls = $2, updated_at = NOW() WHERE id = $1;
