@@ -13,6 +13,15 @@ import (
 	"github.com/lib/pq"
 )
 
+const clearAllImageUrls = `-- name: ClearAllImageUrls :exec
+UPDATE birds SET image_urls = NULL
+`
+
+func (q *Queries) ClearAllImageUrls(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, clearAllImageUrls)
+	return err
+}
+
 const createBird = `-- name: CreateBird :one
 INSERT INTO birds  (id, created_at, updated_at, common_name, scientific_name, family, "order", status, image_urls)
 VALUES ( 

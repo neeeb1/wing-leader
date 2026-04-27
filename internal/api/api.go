@@ -3,6 +3,8 @@ package api
 import (
 	"database/sql"
 	"encoding/json"
+	"sync"
+	"time"
 
 	"net/http"
 
@@ -12,6 +14,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type presignEntry struct {
+	url     string
+	expires time.Time
+}
+
 type ApiConfig struct {
 	NuthatcherApiKey string
 	DbURL            string
@@ -19,6 +26,9 @@ type ApiConfig struct {
 	Db               *sql.DB
 	S3Client         *s3.Client
 	BucketName       string
+
+	presignMu    sync.RWMutex
+	presignCache map[string]presignEntry
 }
 
 func RegisterEndpoints(mux *http.ServeMux, cfg *ApiConfig) {

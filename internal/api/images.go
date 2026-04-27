@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"sync"
@@ -13,11 +12,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/disintegration/imaging"
 	"github.com/neeeb1/rate_birds/internal/database"
 	"github.com/rs/zerolog/log"
 )
 
-// PresignImageURL returns a short-lived presigned URL for a Tigris object.
+const presignTTL = 23 * time.Hour
+
+// PresignImageURL returns a presigned URL for a Tigris object, cached for 23 hours.
+// Caching ensures all users get the same URL for the same image, allowing browsers
+// to cache the fetched image across page loads.
 // Falls back to the stored URL unchanged for non-Tigris images.
 func (cfg *ApiConfig) PresignImageURL(storedURL string) string {
 	if cfg.S3Client == nil || !strings.Contains(storedURL, "tigris") {
@@ -39,6 +43,17 @@ func (cfg *ApiConfig) PresignImageURL(storedURL string) string {
 		return storedURL
 	}
 
+	// Check cache
+	cfg.presignMu.RLock()
+	if cfg.presignCache != nil {
+		if entry, ok := cfg.presignCache[key]; ok && time.Now().Before(entry.expires) {
+			cfg.presignMu.RUnlock()
+			return entry.url
+		}
+	}
+	cfg.presignMu.RUnlock()
+
+	// Generate new presigned URL
 	presignClient := s3.NewPresignClient(cfg.S3Client)
 	req, err := presignClient.PresignGetObject(context.Background(), &s3.GetObjectInput{
 		Bucket: aws.String(cfg.BucketName),
@@ -49,6 +64,14 @@ func (cfg *ApiConfig) PresignImageURL(storedURL string) string {
 	if err != nil {
 		return storedURL
 	}
+
+	cfg.presignMu.Lock()
+	if cfg.presignCache == nil {
+		cfg.presignCache = make(map[string]presignEntry)
+	}
+	cfg.presignCache[key] = presignEntry{url: req.URL, expires: time.Now().Add(presignTTL)}
+	cfg.presignMu.Unlock()
+
 	return req.URL
 }
 
@@ -164,21 +187,23 @@ func (cfg *ApiConfig) uploadImageToS3(sourceURL, key string) error {
 		return fmt.Errorf("download returned status %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	img, err := imaging.Decode(resp.Body)
 	if err != nil {
-		return fmt.Errorf("failed to read image body: %w", err)
+		return fmt.Errorf("failed to decode image: %w", err)
 	}
 
-	contentType := resp.Header.Get("Content-Type")
-	if contentType == "" {
-		contentType = "image/jpeg"
+	resized := imaging.Fit(img, 500, 500, imaging.Lanczos)
+
+	var buf bytes.Buffer
+	if err := imaging.Encode(&buf, resized, imaging.JPEG, imaging.JPEGQuality(85)); err != nil {
+		return fmt.Errorf("failed to encode image: %w", err)
 	}
 
 	_, err = cfg.S3Client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket:      aws.String(cfg.BucketName),
 		Key:         aws.String(key),
-		Body:        bytes.NewReader(body),
-		ContentType: aws.String(contentType),
+		Body:        &buf,
+		ContentType: aws.String("image/jpeg"),
 		ACL:         types.ObjectCannedACLPublicRead,
 	})
 	return err

@@ -31,6 +31,11 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 		RespondWithError(w, 503, "Failed to get random birds with images")
 		return
 	}
+	if len(rng_bird) < 2 {
+		log.Warn().Int("got", len(rng_bird)).Msg("not enough birds with images")
+		RespondWithError(w, 503, "Not enough birds with images available")
+		return
+	}
 
 	newLeftBird, newRightBird := rng_bird[0], rng_bird[1]
 

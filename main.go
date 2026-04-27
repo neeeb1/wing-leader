@@ -134,7 +134,7 @@ func main() {
 				log.Fatal().Err(err).Msg("failed to count db entries")
 				return
 			}
-			if count == 0 {
+			if count == 0 || os.Getenv("REPOPULATE") == "true" {
 				if err = apiCfg.PopulateBirdDB(); err != nil {
 					log.Fatal().Err(err).Msg("failed to populate birds")
 					return
@@ -149,6 +149,15 @@ func main() {
 			}
 		} else {
 			log.Warn().Msg("Starting without database — data endpoints will return 503")
+		}
+
+		if os.Getenv("RESET_IMAGES") == "true" && apiCfg.DbQueries != nil {
+			log.Info().Msg("RESET_IMAGES=true — clearing all image_urls")
+			if err := apiCfg.DbQueries.ClearAllImageUrls(context.Background()); err != nil {
+				log.Error().Err(err).Msg("failed to clear image URLs")
+			} else {
+				log.Info().Msg("image_urls cleared")
+			}
 		}
 
 		if err := apiCfg.CacheImages(); err != nil {
