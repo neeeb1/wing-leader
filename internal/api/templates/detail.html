@@ -30,7 +30,7 @@
 
         <div id="profile-wrapper">
             <div class="profile-image">
-                <img src="{{.Image}}" alt="{{.CommonName}}">
+                <img src="{{index .Images 0}}" alt="{{.CommonName}}">
             </div>
             <div class="profile-details">
                 <div class="profile-name">
@@ -58,6 +58,16 @@
                 </div>
             </div>
         </div>
+
+        {{if gt (len .Images) 1}}
+        <div class="image-gallery">
+            {{range .Images}}
+            <div class="gallery-item">
+                <img src="{{.}}" alt="">
+            </div>
+            {{end}}
+        </div>
+        {{end}}
 
     </main>
 

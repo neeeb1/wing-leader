@@ -33,12 +33,12 @@ func (cfg *ApiConfig) handleBirdDetail(w http.ResponseWriter, r *http.Request) {
 		log.Error().Err(err).Msg("unable to get bird by UUID")
 	}
 
-	var imageURL string
-	if len(bird.ImageUrls) > 0 {
-		imageURL = cfg.PresignImageURL(bird.ImageUrls[0])
+	imageURLs := make([]string, 0, len(bird.ImageUrls))
+	for _, u := range bird.ImageUrls {
+		imageURLs = append(imageURLs, cfg.PresignImageURL(u))
 	}
 
-	payload, err := buildBirdDetail(bird, imageURL)
+	payload, err := buildBirdDetail(bird, imageURLs)
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to format template")
 	}
@@ -46,7 +46,7 @@ func (cfg *ApiConfig) handleBirdDetail(w http.ResponseWriter, r *http.Request) {
 	w.Write(payload.Bytes())
 }
 
-func buildBirdDetail(bird database.Bird, imageURL string) (bytes.Buffer, error) {
+func buildBirdDetail(bird database.Bird, imageURLs []string) (bytes.Buffer, error) {
 	var payload bytes.Buffer
 
 	tmpl, err := template.New("").ParseFS(embedTemplates, "templates/*.html")
@@ -54,8 +54,8 @@ func buildBirdDetail(bird database.Bird, imageURL string) (bytes.Buffer, error) 
 		log.Error().Err(err).Msg("failed to build bird template")
 	}
 
-	if imageURL == "" {
-		imageURL = `https://placehold.co/600x600?text=Image\nNot\nFound&font=raleway`
+	if len(imageURLs) == 0 {
+		imageURLs = []string{`https://placehold.co/600x600?text=Image\nNot\nFound&font=raleway`}
 	}
 
 	err = tmpl.ExecuteTemplate(&payload, "detail.html", struct {
@@ -65,7 +65,7 @@ func buildBirdDetail(bird database.Bird, imageURL string) (bytes.Buffer, error) 
 		Family         string
 		Order          string
 		Status         string
-		Image          string
+		Images         []string
 	}{
 		bird.UpdatedAt.Format("Mon, Jan 2 3:04PM"),
 		bird.CommonName.String,
@@ -73,7 +73,7 @@ func buildBirdDetail(bird database.Bird, imageURL string) (bytes.Buffer, error) 
 		bird.Family.String,
 		bird.Order.String,
 		bird.Status.String,
-		imageURL,
+		imageURLs,
 	})
 	if err != nil {
 		return payload, err

@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"fmt"
+	"math/rand"
 
 	"net/http"
 	"strconv"
@@ -111,13 +112,13 @@ func (cfg *ApiConfig) handleLoadBirds(w http.ResponseWriter, r *http.Request) {
 				</button>
 			</div>
 		</div>`,
-		cfg.PresignImageURL(newLeftBird.ImageUrls[0]),
+		cfg.PresignImageURL(newLeftBird.ImageUrls[rand.Intn(len(newLeftBird.ImageUrls))]),
 		newLeftBird.CommonName.String,
 		newLeftBird.CommonName.String,
 		newLeftBird.ScientificName.String,
 		newLeftBird.ID.String(),
 		newRightBird.ID.String(),
-		cfg.PresignImageURL(newRightBird.ImageUrls[0]),
+		cfg.PresignImageURL(newRightBird.ImageUrls[rand.Intn(len(newRightBird.ImageUrls))]),
 		newRightBird.CommonName.String,
 		newRightBird.CommonName.String,
 		newRightBird.ScientificName.String,
